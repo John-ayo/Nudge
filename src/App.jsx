@@ -12,6 +12,8 @@ import CalendarPage   from "./pages/CalendarPage";
 import ProfilePage    from "./pages/ProfilePage";
 import SettingsPage   from "./pages/SettingsPage";
 import AllPages       from "./pages/AllPages";
+import NotFoundPage   from "./pages/NotFoundPage";
+import ServerErrorPage from "./pages/ServerErrorPage";
 
 // Shared component
 import Sidebar from "./components/Sidebar";
@@ -65,6 +67,9 @@ function AppShell() {
 
           {/* Fallback */}
           <Route path="*" element={<LandingPage />} />
+          {/* Error pages */}
+          <Route path="/500" element={<ServerErrorPage />}/>
+          <Route path="*"    element={<NotFoundPage />}/>          
         </Routes>
         </div>
       </div>

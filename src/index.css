@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+@import "./tailwind-customs.css";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: #000000;
+    font-family: 'DM Sans', sans-serif;
+    color: #F5F5F5;
+  }
+
+  ::-webkit-scrollbar {
+    width: 0.25rem;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #3D3870;
+    border-radius: 9999px;
+  }
+
+  .syne {
+    font-family: 'Syne', sans-serif;
+  }
+}

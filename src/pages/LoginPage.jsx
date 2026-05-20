@@ -1,15 +1,36 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { signIn, signInWithGoogle } from "../lib/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    setTimeout(() => setLoading(false), 1500);
+    try {
+      await signIn(email, password);
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.message || "Login failed. Check your credentials.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError("");
+    try {
+      await signInWithGoogle();
+      // Google OAuth redirects automatically, no navigate needed
+    } catch (err) {
+      setError(err.message || "Google sign-in failed.");
+    }
   };
 
   const inputBase =
@@ -29,7 +50,6 @@ export default function LoginPage() {
         className="relative lg:w-[45%] flex flex-col justify-between p-8 lg:p-14 min-h-[280px] lg:min-h-screen overflow-hidden"
         style={{ backgroundColor: "#0d0d0d" }}
       >
-        {/* Grid texture */}
         <div
           className="absolute inset-0 opacity-[0.025] pointer-events-none"
           style={{
@@ -38,7 +58,6 @@ export default function LoginPage() {
             backgroundSize: "40px 40px",
           }}
         />
-        {/* Glow */}
         <div
           className="absolute bottom-0 left-0 w-96 h-96 pointer-events-none opacity-15"
           style={{
@@ -47,7 +66,6 @@ export default function LoginPage() {
           }}
         />
 
-        {/* Logo */}
         <div className="relative z-10">
           <span className="text-2xl font-bold" style={{ fontFamily: "'Syne',sans-serif" }}>
             <span className="text-white">Nudge</span>
@@ -55,7 +73,6 @@ export default function LoginPage() {
           </span>
         </div>
 
-        {/* Hero content */}
         <div className="relative z-10 my-10 lg:my-0">
           <div className="text-5xl mb-6">👋</div>
           <h2
@@ -100,9 +117,18 @@ export default function LoginPage() {
             </Link>
           </p>
 
+          {/* Error message */}
+          {error && (
+            <div className="mb-4 px-4 py-3 rounded-2xl text-sm text-red-400 border border-red-400/20"
+              style={{ backgroundColor: "rgba(239,68,68,0.08)" }}>
+              {error}
+            </div>
+          )}
+
           {/* Google */}
           <button
             type="button"
+            onClick={handleGoogle}
             className="w-full rounded-2xl py-3 px-4 flex items-center justify-center gap-3 text-sm font-medium text-white border border-[#2a2a2a] hover:border-[#6C63FF]/40 transition-all duration-200 mb-6"
             style={{ backgroundColor: "#161616" }}
           >
@@ -115,7 +141,6 @@ export default function LoginPage() {
             Continue with Google
           </button>
 
-          {/* Divider */}
           <div className="flex items-center gap-3 mb-6">
             <div className="flex-1 h-px bg-[#1f1f1f]" />
             <span className="text-[#444] text-xs">or</span>
@@ -161,7 +186,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl py-3 text-sm font-bold text-white transition-all duration-200 mt-2 hover:opacity-90"
+              className="w-full rounded-2xl py-3 text-sm font-bold text-white transition-all duration-200 mt-2 hover:opacity-90 disabled:opacity-50"
               style={{ backgroundColor: "#6C63FF" }}
             >
               {loading ? (
@@ -180,4 +205,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

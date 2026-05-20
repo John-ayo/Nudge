@@ -1,16 +1,10 @@
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
 import {
   Menu, Plus, Play, Clock, Star, Moon,
   Flame, Zap, Trophy, Rocket, PartyPopper,
 } from "lucide-react";
-
-const INITIAL_TASKS = [
-  { id:1, title:"Finish project proposal draft", category:"work",   catColor:"#6C63FF", est:45, due:"Today",    priority:"high",   done:false, group:"today"    },
-  { id:2, title:"Review pull request #43",        category:"Dev",    catColor:"#10B981", est:25, due:"Today",    priority:"medium", done:false, group:"today"    },
-  { id:3, title:"Read chapter two of GET 203",    category:"study",  catColor:"#F59E0B", est:60, due:"Tomorrow", priority:"low",    done:false, group:"upcoming" },
-  { id:4, title:"Gym session",                    category:"Health", catColor:"#EF4444", est:55, due:"Tomorrow", priority:"low",    done:false, group:"upcoming" },
-];
+import { useAuth } from "../context/AuthContext";
+import { fetchTasks, createTask, updateTask } from "../lib/tasks";
 
 const PRIORITY_COLOR = { high:"#EF4444", medium:"#F59E0B", low:"#22C55E" };
 const STREAK_DAYS    = [true,false,false,false,false,false,false];
@@ -25,9 +19,9 @@ function getGreeting() {
 function AddTaskModal({ onClose, onAdd }) {
   const [title,    setTitle]    = useState("");
   const [category, setCategory] = useState("Work");
-  const [priority, setPriority] = useState("High");
+  const [priority, setPriority] = useState("high");
   const [est,      setEst]      = useState("25");
-  const [due,      setDue]      = useState("Today");
+  const [due,      setDue]      = useState(new Date().toISOString().split('T')[0]);
   const sel = { backgroundColor:"#1a1a1a", border:"1px solid #333", color:"#fff", width:"100%", borderRadius:"12px", padding:"10px 12px", fontSize:"14px", outline:"none" };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor:"rgba(0,0,0,0.8)" }}>
@@ -45,11 +39,11 @@ function AddTaskModal({ onClose, onAdd }) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">PROPERTY</label>
+            <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">PRIORITY</label>
             <div className="flex gap-2">
-              {["Low","Medium","High"].map(p=>(
-                <button key={p} onClick={()=>setPriority(p)} className="flex-1 rounded-xl py-2 text-xs font-semibold transition-all"
-                  style={{ backgroundColor:priority===p?(p==="High"?"#7C2D12":p==="Medium"?"#292408":"#052e16"):"#111", color:priority===p?(p==="High"?"#FCA5A5":p==="Medium"?"#FCD34D":"#86EFAC"):"#9CA3AF", border:`1px solid ${priority===p?"#444":"#333"}` }}>
+              {["low","medium","high"].map(p=>(
+                <button key={p} onClick={()=>setPriority(p)} className="flex-1 rounded-xl py-2 text-xs font-semibold capitalize transition-all"
+                  style={{ backgroundColor:priority===p?(p==="high"?"#7C2D12":p==="medium"?"#292408":"#052e16"):"#111", color:priority===p?(p==="high"?"#FCA5A5":p==="medium"?"#FCD34D":"#86EFAC"):"#9CA3AF", border:`1px solid ${priority===p?"#444":"#333"}` }}>
                   {p}
                 </button>
               ))}
@@ -63,14 +57,15 @@ function AddTaskModal({ onClose, onAdd }) {
               style={{ backgroundColor:"#111", border:"1px solid #333" }} onFocus={e=>e.target.style.borderColor="#6C63FF"} onBlur={e=>e.target.style.borderColor="#333"}/>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">DUE</label>
-            <select value={due} onChange={e=>setDue(e.target.value)} style={sel}>
-              {["Today","Tomorrow","This week","Next week"].map(d=><option key={d} style={{ backgroundColor:"#1a1a1a" }}>{d}</option>)}
-            </select>
+            <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">DUE DATE</label>
+            <input type="date" value={due} onChange={e=>setDue(e.target.value)}
+              className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none"
+              style={{ backgroundColor:"#111", border:"1px solid #333", colorScheme:"dark" }}
+              onFocus={e=>e.target.style.borderColor="#6C63FF"} onBlur={e=>e.target.style.borderColor="#333"}/>
           </div>
         </div>
         <div className="flex gap-3">
-          <button onClick={()=>{if(title.trim()){onAdd({title,category,priority,est:parseInt(est),due});onClose();}}}
+          <button onClick={()=>{ if(title.trim()){ onAdd({ title, priority, est:parseInt(est), due }); onClose(); } }}
             className="flex-1 rounded-2xl py-3 text-sm font-bold text-white hover:opacity-90 transition-all" style={{ backgroundColor:"#6C63FF" }}>Add Task</button>
           <button onClick={onClose} className="flex-1 rounded-2xl py-3 text-sm font-medium text-gray-400 hover:text-white transition-all"
             style={{ backgroundColor:"transparent", border:"1px solid #333" }}>Cancel</button>
@@ -131,52 +126,68 @@ function TaskRow({ task, onToggle }) {
         style={{ borderColor:task.done?"#6C63FF":"#444", backgroundColor:task.done?"#6C63FF":"transparent" }}>
         {task.done&&<svg width="10" height="10" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>}
       </button>
+      <div className="w-0.5 h-8 rounded-full flex-shrink-0" style={{ backgroundColor:PRIORITY_COLOR[task.priority] }}/>
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium truncate ${task.done?"line-through text-gray-600":"text-white"}`}>{task.title}</p>
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ backgroundColor:task.catColor+"22", color:task.catColor }}>{task.category}</span>
-          <span className="flex items-center gap-1 text-xs text-gray-400"><Clock size={12}/> {task.est}min</span>
-        </div>
+        <p className={`text-sm font-semibold truncate ${task.done?"line-through text-gray-600":"text-white"}`}>{task.title}</p>
+        <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
+          <Clock size={10}/> {task.est ?? "?"}min
+          {task.due_date && <span className="ml-1">· {new Date(task.due_date).toLocaleDateString('en-GB', { day:'numeric', month:'short' })}</span>}
+        </p>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <span className="w-2 h-2 rounded-full" style={{ backgroundColor:PRIORITY_COLOR[task.priority] }}/>
-        <button className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold text-white hover:opacity-80 transition-all" style={{ backgroundColor:"#6C63FF" }}>
-          <Play size={11}/> Focus
-        </button>
-      </div>
+      <button className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold text-gray-300 flex-shrink-0"
+        style={{ backgroundColor:"#2a2a2a", border:"1px solid #333" }}>
+        <Play size={10}/> Focus
+      </button>
     </div>
   );
 }
 
 export default function DashboardPage({ onMenuOpen, user }) {
-  const [tasks,          setTasks]         = useState(INITIAL_TASKS);
-  const [showAdd,        setShowAdd]       = useState(false);
-  const [celebration,    setCelebration]   = useState(null);
+  const { user: authUser } = useAuth();
+  const [tasks,          setTasks]          = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [showAdd,        setShowAdd]        = useState(false);
+  const [celebration,    setCelebration]    = useState(null);
   const [showStreakLoss, setShowStreakLoss] = useState(false);
 
+  // Fetch tasks on mount
+  useEffect(() => {
+    if (!authUser) return
+    fetchTasks(authUser.id)
+      .then(setTasks)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [authUser])
 
-  const todayTasks    = tasks.filter(t=>t.group==="today");
-  const upcomingTasks = tasks.filter(t=>t.group==="upcoming");
-  const doneCount     = tasks.filter(t=>t.done).length;
-  const totalCount    = tasks.length;
+  const today = new Date().toDateString()
 
-  const toggleTask = id => {
-    const t = tasks.find(t=>t.id===id);
-    if(t&&!t.done) setCelebration(t.title);
-    setTasks(prev=>prev.map(t=>t.id===id?{...t,done:!t.done}:t));
-  };
+  const todayTasks    = tasks.filter(t => t.due_date && new Date(t.due_date).toDateString() === today)
+  const upcomingTasks = tasks.filter(t => t.due_date && new Date(t.due_date).toDateString() !== today && !t.done)
+  const doneCount     = todayTasks.filter(t => t.done).length
+  const totalCount    = todayTasks.length
 
-  const addTask = data => {
-    setTasks(prev=>[...prev,{ id:Date.now(), title:data.title, category:data.category, catColor:"#6C63FF", est:data.est, due:data.due, priority:data.priority.toLowerCase(), done:false, group:data.due==="Today"?"today":"upcoming" }]);
-  };
+  const r    = 22;
+  const circ = 2 * Math.PI * r;
+  const dash = circ - (totalCount > 0 ? (doneCount / totalCount) * circ : 0);
 
-  const r=22, circ=2*Math.PI*r, pct=totalCount>0?doneCount/totalCount:0, dash=circ-pct*circ;
+  const toggleTask = async (id) => {
+    const task = tasks.find(t => t.id === id)
+    const updated = await updateTask(id, { done: !task.done })
+    setTasks(prev => prev.map(t => t.id === id ? updated : t))
+    if (!task.done) setCelebration(task.title)
+  }
+
+  const addTask = async (data) => {
+    if (!authUser) return
+    const newTask = await createTask(authUser.id, data)
+    setTasks(prev => [newTask, ...prev])
+  }
+
+  const displayName = authUser?.user_metadata?.name ?? authUser?.email?.split('@')[0] ?? "there"
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor:"#0a0a0a", fontFamily:"'DM Sans',sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');*{box-sizing:border-box;}::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:4px;}`}</style>
-
-
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');`}</style>
 
       <div className="sticky top-0 z-20 flex items-start justify-between px-5 lg:px-8 py-5"
         style={{ backgroundColor:"#0a0a0a", borderBottom:"1px solid #141414" }}>
@@ -186,7 +197,7 @@ export default function DashboardPage({ onMenuOpen, user }) {
           </button>
           <div>
             <p className="text-gray-500 text-xs">{getGreeting()}</p>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white" style={{ fontFamily:"'Syne',sans-serif" }}>{user?.name??"Johnpaul3.0"}</h1>
+            <h1 className="text-2xl lg:text-3xl font-bold text-white" style={{ fontFamily:"'Syne',sans-serif" }}>{displayName}</h1>
             <p className="text-gray-400 text-xs mt-0.5">{todayTasks.filter(t=>!t.done).length} tasks left to conquer today.</p>
           </div>
         </div>
@@ -194,8 +205,8 @@ export default function DashboardPage({ onMenuOpen, user }) {
           className="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 transition-all flex-shrink-0"
           style={{ backgroundColor:"#6C63FF" }}>
           <Plus size={16}/>
-          <span className="hidden sm:inline">+ New Task</span>
-          <span className="sm:hidden">+</span>
+          <span className="hidden sm:inline">New Task</span>
+          <span className="sm:hidden"></span>
         </button>
       </div>
 
@@ -235,9 +246,9 @@ export default function DashboardPage({ onMenuOpen, user }) {
             <p className="text-3xl font-bold mb-3" style={{ color:"#6C63FF" }}>+200 <span className="text-gray-500 text-sm font-normal">points</span></p>
             <div className="flex flex-wrap gap-2">
               {[
-                { label:"Active",      Icon:Zap,      bg:"#1e1b4b", color:"#a78bfa" },
-                { label:"On fire",     Icon:Trophy,   bg:"#431407", color:"#fb923c" },
-                { label:"Crushing it", Icon:Rocket,   bg:"#1a1a1a", color:"#e5e7eb" },
+                { label:"Active",      Icon:Zap,    bg:"#1e1b4b", color:"#a78bfa" },
+                { label:"On fire",     Icon:Trophy, bg:"#431407", color:"#fb923c" },
+                { label:"Crushing it", Icon:Rocket, bg:"#1a1a1a", color:"#e5e7eb" },
               ].map(b=>(
                 <span key={b.label} className="rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1"
                   style={{ backgroundColor:b.bg, color:b.color }}>
@@ -261,48 +272,62 @@ export default function DashboardPage({ onMenuOpen, user }) {
         </div>
 
         {/* Tasks + Up Next */}
-        <div className="flex flex-col lg:flex-row gap-5">
-          <div className="flex-1 min-w-0">
-            {todayTasks.length>0&&(
-              <div className="mb-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-white text-sm font-bold">TODAY</span>
-                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor:"#2a2a2a" }}>{todayTasks.filter(t=>!t.done).length}</span>
-                </div>
-                <div className="space-y-2">{todayTasks.map(t=><TaskRow key={t.id} task={t} onToggle={toggleTask}/>)}</div>
-              </div>
-            )}
-            {upcomingTasks.length>0&&(
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-white text-sm font-bold">UPCOMING</span>
-                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor:"#2a2a2a" }}>{upcomingTasks.filter(t=>!t.done).length}</span>
-                </div>
-                <div className="space-y-2">{upcomingTasks.map(t=><TaskRow key={t.id} task={t} onToggle={toggleTask}/>)}</div>
-              </div>
-            )}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-6 h-6 border-2 border-[#6C63FF] border-t-transparent rounded-full animate-spin"/>
           </div>
-
-          <div className="w-full lg:w-64 flex-shrink-0">
-            <p className="text-white text-sm font-bold mb-3">UP NEXT</p>
-            <div className="space-y-2">
-              {tasks.slice(0,4).map((item,i)=>(
-                <div key={i} className="rounded-xl p-3" style={{ backgroundColor:"#161616", border:"1px solid #2a2a2a" }}>
-                  <p className="text-white text-xs font-semibold mb-1">{item.title}</p>
-                  <p className="text-gray-400 text-xs flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor:PRIORITY_COLOR[item.priority] }}/>
-                    {item.est}min · {item.due}
-                  </p>
+        ) : (
+          <div className="flex flex-col lg:flex-row gap-5">
+            <div className="flex-1 min-w-0">
+              {todayTasks.length > 0 && (
+                <div className="mb-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-white text-sm font-bold">TODAY</span>
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor:"#2a2a2a" }}>{todayTasks.filter(t=>!t.done).length}</span>
+                  </div>
+                  <div className="space-y-2">{todayTasks.map(t=><TaskRow key={t.id} task={t} onToggle={toggleTask}/>)}</div>
                 </div>
-              ))}
+              )}
+              {upcomingTasks.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-white text-sm font-bold">UPCOMING</span>
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor:"#2a2a2a" }}>{upcomingTasks.length}</span>
+                  </div>
+                  <div className="space-y-2">{upcomingTasks.map(t=><TaskRow key={t.id} task={t} onToggle={toggleTask}/>)}</div>
+                </div>
+              )}
+              {tasks.length === 0 && (
+                <div className="text-center py-16">
+                  <div className="text-5xl mb-4">📋</div>
+                  <p className="text-white font-semibold mb-1">No tasks yet</p>
+                  <p className="text-gray-500 text-sm">Add your first task to get started.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="w-full lg:w-64 flex-shrink-0">
+              <p className="text-white text-sm font-bold mb-3">UP NEXT</p>
+              <div className="space-y-2">
+                {tasks.filter(t => !t.done).slice(0, 4).map((item, i) => (
+                  <div key={i} className="rounded-xl p-3" style={{ backgroundColor:"#161616", border:"1px solid #2a2a2a" }}>
+                    <p className="text-white text-xs font-semibold mb-1">{item.title}</p>
+                    <p className="text-gray-400 text-xs flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor:PRIORITY_COLOR[item.priority] }}/>
+                      {item.est ?? "?"}min
+                      {item.due_date && <span>· {new Date(item.due_date).toLocaleDateString('en-GB', { day:'numeric', month:'short' })}</span>}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {showAdd&&<AddTaskModal onClose={()=>setShowAdd(false)} onAdd={addTask}/>}
-      {celebration&&<CelebrationModal taskTitle={celebration} onClose={()=>setCelebration(null)}/>}
-      {showStreakLoss&&<StreakLossModal onClose={()=>setShowStreakLoss(false)}/>}
+      {showAdd && <AddTaskModal onClose={()=>setShowAdd(false)} onAdd={addTask}/>}
+      {celebration && <CelebrationModal taskTitle={celebration} onClose={()=>setCelebration(null)}/>}
+      {showStreakLoss && <StreakLossModal onClose={()=>setShowStreakLoss(false)}/>}
     </div>
   );
 }

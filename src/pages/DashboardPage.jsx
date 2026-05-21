@@ -188,7 +188,7 @@ function TaskRow({ task, onToggle }) {
         </p>
         <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
           <Clock size={10}/> {task.est ?? "?"}min
-          {task.due_date && <span>· {new Date(task.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>}
+          {task.due_date && <span>· {new Date(task.due_date + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>}
         </p>
       </div>
       {!task.done && (
@@ -263,9 +263,10 @@ export default function DashboardPage({ onMenuOpen }) {
     return () => supabase.removeChannel(channel);
   }, [user]);
 
-  const today         = new Date().toDateString();
-  const todayTasks    = tasks.filter(t => t.due_date && new Date(t.due_date).toDateString() === today);
-  const upcomingTasks = tasks.filter(t => t.due_date && new Date(t.due_date).toDateString() !== today && !t.done);
+  // Compare YYYY-MM-DD strings directly to avoid timezone offset shifting dates
+  const todayStr      = new Date().toLocaleDateString("en-CA"); // "YYYY-MM-DD"
+  const todayTasks    = tasks.filter(t => t.due_date && t.due_date.slice(0, 10) === todayStr);
+  const upcomingTasks = tasks.filter(t => t.due_date && t.due_date.slice(0, 10) !== todayStr && !t.done);
   const doneCount     = todayTasks.filter(t => t.done).length;
   const totalCount    = todayTasks.length;
   const r             = 22;
@@ -310,7 +311,7 @@ export default function DashboardPage({ onMenuOpen }) {
       title:       data.title,
       priority:    data.priority,
       est:         data.est,
-      due_date:    data.due,
+      due_date:    data.due,      // tasks.js now reads due_date ?? due
       category_id: data.category_id,
     });
     setTasks(prev => [newTask, ...prev]);

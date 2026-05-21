@@ -3,6 +3,8 @@ import ScrollReveal from "../components/ScrollReveal";
 import { useAuth } from "../context/AuthContext";
 import { fetchTasks, createTask, updateTask, deleteTask } from "../lib/tasks";
 import { fetchCategories } from "../lib/categories";
+import { supabase } from "../lib/supabase";
+import { PartyPopper, Flame, Zap } from "lucide-react";
 
 const MenuIcon  = () => (<svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>);
 const PlusIcon  = () => (<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>);
@@ -166,7 +168,7 @@ function TaskRow({ task, onToggle, onEdit, onDelete, hoveredId, setHoveredId, ca
         <div className="flex items-center gap-2 mt-1 flex-wrap">
           <span className="flex items-center gap-1 text-xs text-gray-400"><ClockIcon/> {task.est ?? "?"}min</span>
           <span className="text-xs text-gray-400">
-            {task.due_date ? new Date(task.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""}
+            {task.due_date ? new Date(task.due_date + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""}
           </span>
           <span className="text-xs font-semibold" style={{ color: PRIORITY_COLOR[task.priority] }}>
             {PRIORITY_LABEL[task.priority]}
@@ -197,6 +199,36 @@ function TaskRow({ task, onToggle, onEdit, onDelete, hoveredId, setHoveredId, ca
   );
 }
 
+function CelebrationModal({ taskTitle, xpAwarded, newStreak, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(0,0,0,0.8)" }} onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl p-10 text-center"
+        style={{ backgroundColor: "#1a1a1a", border: "1px solid #2a2a2a" }}>
+        <div className="flex justify-center mb-4"><PartyPopper size={56} color="#6C63FF"/></div>
+        <h2 className="text-4xl font-bold mb-2" style={{ fontFamily: "'Syne',sans-serif", color: "#F59E0B" }}>
+          WELL DONE!
+        </h2>
+        <p className="text-white text-base font-semibold mb-1">{taskTitle}</p>
+        <p className="text-gray-400 text-sm mb-6 flex items-center justify-center gap-1">
+          That's what you're made of! <Flame size={16} color="#F97316"/>
+        </p>
+        <div className="flex gap-3 justify-center mb-4">
+          <span className="rounded-full px-4 py-2 text-sm font-bold text-white flex items-center gap-1.5"
+            style={{ backgroundColor: "#6C63FF" }}>
+            <Zap size={14}/> +{xpAwarded} XP
+          </span>
+          <span className="rounded-full px-4 py-2 text-sm font-bold text-white flex items-center gap-1.5"
+            style={{ backgroundColor: "#064E3B" }}>
+            <Flame size={14} color="#F97316"/> {newStreak} day streak
+          </span>
+        </div>
+        <p className="text-gray-600 text-xs">Click anywhere to continue</p>
+      </div>
+    </div>
+  );
+}
+
 export default function MyTasksPage({ onMenuOpen }) {
   const { user } = useAuth();
   const [tasks,       setTasks]       = useState([]);
@@ -206,6 +238,7 @@ export default function MyTasksPage({ onMenuOpen }) {
   const [editingTask, setEditingTask] = useState(null);
   const [hoveredId,   setHoveredId]   = useState(null);
   const [error,       setError]       = useState("");
+  const [celebration, setCelebration] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -224,9 +257,30 @@ export default function MyTasksPage({ onMenuOpen }) {
   });
 
   const toggleTask = async (id) => {
-    const task    = tasks.find(t => t.id === id);
-    const updated = await updateTask(id, { done: !task.done });
-    setTasks(prev => prev.map(t => t.id === id ? updated : t));
+    const task   = tasks.find(t => t.id === id);
+    const newDone = !task.done;
+
+    // Optimistic update
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: newDone } : t));
+
+    try {
+      await updateTask(id, { done: newDone });
+
+      if (newDone) {
+        const res = await supabase.functions.invoke("complete-task", {
+          body: { task_id: id, user_id: user.id },
+        });
+        if (res.data) {
+          const { xp_awarded, new_streak } = res.data;
+          setCelebration({ title: task.title, xp: xp_awarded, newStreak: new_streak });
+        }
+      }
+    } catch (err) {
+      // Revert on error
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, done: task.done } : t));
+      setError(err.message);
+      console.error("Toggle task error:", err);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -380,6 +434,14 @@ export default function MyTasksPage({ onMenuOpen }) {
           onClose={() => setEditingTask(null)}
           onSave={handleEdit}
           categories={categories}
+        />
+      )}
+      {celebration && (
+        <CelebrationModal
+          taskTitle={celebration.title}
+          xpAwarded={celebration.xp}
+          newStreak={celebration.newStreak}
+          onClose={() => setCelebration(null)}
         />
       )}
     </div>

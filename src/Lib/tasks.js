@@ -14,11 +14,13 @@ export async function createTask(userId, task) {
   const { data, error } = await supabase
     .from('tasks')
     .insert({
-      user_id:  userId,
-      title:    task.title,
-      priority: task.priority,
-      due_date: task.due,
-      done:     false,
+      user_id:     userId,
+      title:       task.title,
+      priority:    task.priority,
+      due_date:    task.due_date ?? task.due ?? null,
+      est:         task.est     ?? null,
+      category_id: task.category_id ?? null,
+      done:        false,
     })
     .select()
     .single()

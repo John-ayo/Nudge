@@ -188,7 +188,7 @@ function TaskRow({ task, onToggle }) {
         </p>
         <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
           <Clock size={10}/> {task.est ?? "?"}min
-          {task.due_date && <span>· {new Date(task.due_date + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>}
+          {task.due_date && <span>· {new Date(task.due_date.slice(0, 10) + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>}
         </p>
       </div>
       {!task.done && (
@@ -283,13 +283,20 @@ export default function DashboardPage({ onMenuOpen }) {
 
     try {
       // Update task in DB
-      await updateTask(task.id, { done: newDone });
+      const updated = await updateTask(task.id, { done: newDone });
+      console.log("updateTask result:", updated);
 
-      // If completing the task, call edge function for XP + streak
       if (newDone) {
+        const sessionRes = await supabase.auth.getSession();
+        const session = sessionRes.data.session;
+
         const res = await supabase.functions.invoke("complete-task", {
           body: { task_id: task.id, user_id: user.id },
+         
         });
+        console.log("complete-task res:", res);
+
+        if (res.error) console.error("complete-task error:", res.error);
 
         if (res.data) {
           const { xp_awarded, new_streak } = res.data;
@@ -478,7 +485,7 @@ export default function DashboardPage({ onMenuOpen }) {
                     <p className="text-gray-400 text-xs flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: PRIORITY_COLOR[item.priority] }}/>
                       {item.est ?? "?"}min
-                      {item.due_date && <span>· {new Date(item.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>}
+                      {item.due_date && <span>· {new Date(item.due_date.slice(0, 10) + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>}
                     </p>
                   </div>
                 ))}

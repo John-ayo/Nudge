@@ -168,7 +168,7 @@ function TaskRow({ task, onToggle, onEdit, onDelete, hoveredId, setHoveredId, ca
         <div className="flex items-center gap-2 mt-1 flex-wrap">
           <span className="flex items-center gap-1 text-xs text-gray-400"><ClockIcon/> {task.est ?? "?"}min</span>
           <span className="text-xs text-gray-400">
-            {task.due_date ? new Date(task.due_date + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""}
+            {task.due_date ? new Date(task.due_date.slice(0, 10) + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""}
           </span>
           <span className="text-xs font-semibold" style={{ color: PRIORITY_COLOR[task.priority] }}>
             {PRIORITY_LABEL[task.priority]}
@@ -267,9 +267,18 @@ export default function MyTasksPage({ onMenuOpen }) {
       await updateTask(id, { done: newDone });
 
       if (newDone) {
+        const sessionRes = await supabase.auth.getSession();
+        const session = sessionRes.data.session;
+        
         const res = await supabase.functions.invoke("complete-task", {
           body: { task_id: id, user_id: user.id },
+          /*headers: {
+            uthorization: `Bearer ${session.access_token}`,
+         }, */
         });
+        if (res.error) {
+          console.error("complete-task error:", res.error);
+        }
         if (res.data) {
           const { xp_awarded, new_streak } = res.data;
           setCelebration({ title: task.title, xp: xp_awarded, newStreak: new_streak });

@@ -1,15 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Menu, Plus, Play, Clock, Star, Moon,
   Flame, Zap, Trophy, Rocket, PartyPopper,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { fetchTasks, createTask, updateTask } from "../lib/tasks";
-import { fetchCategories } from "../lib/categories";
-import { supabase } from "../lib/supabase";
+import { useTasks } from "../context/TasksContext";
 
 const PRIORITY_COLOR = { high: "#EF4444", medium: "#F59E0B", low: "#22C55E" };
-const XP_MAP         = { low: 20, medium: 30, high: 45 };
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -203,68 +200,16 @@ function TaskRow({ task, onToggle }) {
 
 export default function DashboardPage({ onMenuOpen }) {
   const { user } = useAuth();
+  const {
+    tasks, categories, totalXP, streak,
+    loading, celebration, setCelebration,
+    toggleTask, addTask,
+  } = useTasks();
 
-  const [tasks,          setTasks]          = useState([]);
-  const [categories,     setCategories]     = useState([]);
-  const [totalXP,        setTotalXP]        = useState(0);
-  const [streak,         setStreak]         = useState({ current: 0, best: 0 });
-  const [loading,        setLoading]        = useState(true);
   const [showAdd,        setShowAdd]        = useState(false);
-  const [celebration,    setCelebration]    = useState(null); // { title, xp, newStreak }
   const [showStreakLoss, setShowStreakLoss] = useState(false);
 
-  // Initial data fetch
-  useEffect(() => {
-    if (!user) return;
-
-    async function load() {
-      try {
-        const [tasksData, catsData, xpData, streakData] = await Promise.all([
-          fetchTasks(user.id),
-          fetchCategories(user.id),
-          supabase.from("xp_log").select("amount").eq("user_id", user.id),
-          supabase.from("streaks").select("*").eq("user_id", user.id).single(),
-        ]);
-
-        setTasks(tasksData);
-        setCategories(catsData);
-
-        if (xpData.data) {
-          setTotalXP(xpData.data.reduce((sum, row) => sum + (row.amount ?? 0), 0));
-        }
-        if (streakData.data) {
-          setStreak(streakData.data);
-        }
-      } catch (err) {
-        console.error("Dashboard load error:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
-  }, [user]);
-
-  // Realtime subscription on xp_log
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel("xp_log_realtime")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "xp_log", filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          setTotalXP(prev => prev + (payload.new.amount ?? 0));
-        }
-      )
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
-  }, [user]);
-
-  // Compare YYYY-MM-DD strings directly to avoid timezone offset shifting dates
-  const todayStr      = new Date().toLocaleDateString("en-CA"); // "YYYY-MM-DD"
+  const todayStr      = new Date().toLocaleDateString("en-CA");
   const todayTasks    = tasks.filter(t => t.due_date && t.due_date.slice(0, 10) === todayStr);
   const upcomingTasks = tasks.filter(t => t.due_date && t.due_date.slice(0, 10) !== todayStr && !t.done);
   const doneCount     = todayTasks.filter(t => t.done).length;
@@ -272,70 +217,20 @@ export default function DashboardPage({ onMenuOpen }) {
   const r             = 22;
   const circ          = 2 * Math.PI * r;
   const dash          = totalCount > 0 ? circ * (1 - doneCount / totalCount) : circ;
-
-  // Streak dot indicators - last 7 days relative to streak current
-  const streakDots = Array.from({ length: 7 }, (_, i) => i < streak.current);
-
-  const toggleTask = async (task) => {
-    // Optimistically update UI
-    const newDone = !task.done;
-    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, done: newDone } : t));
-
-    try {
-      // Update task in DB
-      const updated = await updateTask(task.id, { done: newDone });
-      console.log("updateTask result:", updated);
-
-      if (newDone) {
-        const sessionRes = await supabase.auth.getSession();
-        const session = sessionRes.data.session;
-
-        const res = await supabase.functions.invoke("complete-task", {
-          body: { task_id: task.id, user_id: user.id },
-         
-        });
-        console.log("complete-task res:", res);
-
-        if (res.error) console.error("complete-task error:", res.error);
-
-        if (res.data) {
-          const { xp_awarded, new_streak } = res.data;
-          // Update streak state
-          setStreak(prev => ({ ...prev, current: new_streak, best: Math.max(new_streak, prev.best) }));
-          // Show celebration modal
-          setCelebration({ title: task.title, xp: xp_awarded, newStreak: new_streak });
-        }
-      }
-    } catch (err) {
-      // Revert optimistic update on error
-      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, done: task.done } : t));
-      console.error("Toggle task error:", err);
-    }
-  };
-
-  const addTask = async (data) => {
-    const newTask = await createTask(user.id, {
-      title:       data.title,
-      priority:    data.priority,
-      est:         data.est,
-      due_date:    data.due,      // tasks.js now reads due_date ?? due
-      category_id: data.category_id,
-    });
-    setTasks(prev => [newTask, ...prev]);
-  };
+  const streakDots    = Array.from({ length: 7 }, (_, i) => i < streak.current);
 
   const userName = user?.user_metadata?.full_name?.split(" ")[0]
     || user?.email?.split("@")[0]
     || "there";
 
-  // XP today (from xp_log created_at = today)
-  const todayXP = totalXP; // realtime keeps this live
+  const handleAdd = async (data) => {
+    await addTask({ ...data, due_date: data.due });
+  };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#0a0a0a", fontFamily: "'DM Sans',sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');*{box-sizing:border-box;}::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:4px;}`}</style>
 
-      {/* Top bar */}
       <div className="sticky top-0 z-20 flex items-center justify-between px-5 lg:px-8 py-5"
         style={{ backgroundColor: "#0a0a0a", borderBottom: "1px solid #141414" }}>
         <div className="flex items-center gap-4">
@@ -354,16 +249,11 @@ export default function DashboardPage({ onMenuOpen }) {
           style={{ backgroundColor: "#6C63FF" }}>
           <Plus size={16}/>
           <span className="hidden sm:inline">New Task</span>
-          {/* <span className="sm:hidden">+</span> */ }
         </button>
       </div>
 
       <div className="flex-1 overflow-auto px-5 lg:px-8 py-6">
-
-        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-
-          {/* Today's tasks */}
           <div className="rounded-2xl p-5 flex items-center justify-between"
             style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
             <div>
@@ -382,7 +272,6 @@ export default function DashboardPage({ onMenuOpen }) {
             </svg>
           </div>
 
-          {/* Streak */}
           <div className="rounded-2xl p-5" style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
             <p className="text-gray-400 text-xs font-semibold tracking-widest mb-2">CURRENT STREAK</p>
             <p className="text-3xl font-bold text-white mb-1">
@@ -398,7 +287,6 @@ export default function DashboardPage({ onMenuOpen }) {
             </div>
           </div>
 
-          {/* XP */}
           <div className="rounded-2xl p-5" style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
             <p className="text-gray-400 text-xs font-semibold tracking-widest mb-2">TOTAL XP</p>
             <p className="text-3xl font-bold mb-3" style={{ color: "#6C63FF" }}>
@@ -419,7 +307,6 @@ export default function DashboardPage({ onMenuOpen }) {
           </div>
         </div>
 
-        {/* Daily Nudge */}
         <div className="rounded-2xl p-4 mb-5 flex items-center justify-between"
           style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
           <div className="flex items-center gap-3">
@@ -434,7 +321,6 @@ export default function DashboardPage({ onMenuOpen }) {
           </button>
         </div>
 
-        {/* Tasks */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-6 h-6 border-2 border-[#6C63FF] border-t-transparent rounded-full animate-spin"/>
@@ -475,7 +361,6 @@ export default function DashboardPage({ onMenuOpen }) {
               )}
             </div>
 
-            {/* Up Next */}
             <div className="w-full lg:w-64 flex-shrink-0">
               <p className="text-white text-sm font-bold mb-3">UP NEXT</p>
               <div className="space-y-2">
@@ -495,7 +380,7 @@ export default function DashboardPage({ onMenuOpen }) {
         )}
       </div>
 
-      {showAdd && <AddTaskModal onClose={() => setShowAdd(false)} onAdd={addTask} categories={categories}/>}
+      {showAdd && <AddTaskModal onClose={() => setShowAdd(false)} onAdd={handleAdd} categories={categories}/>}
       {celebration && (
         <CelebrationModal
           taskTitle={celebration.title}

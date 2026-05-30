@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTasks } from "../context/TasksContext";
+import { useAffirmation } from "../hooks/useAffirmation";
 
 const PRIORITY_COLOR = { high: "#EF4444", medium: "#F59E0B", low: "#22C55E" };
 
@@ -202,12 +203,21 @@ export default function DashboardPage({ onMenuOpen }) {
   const { user } = useAuth();
   const {
     tasks, categories, totalXP, streak,
-    loading, celebration, setCelebration,
-    toggleTask, addTask,
+    loading, toggleTask, addTask,
   } = useTasks();
 
+  // ─── Step 9: Affirmation Engine ───────────────────────────────────────────
+  const { message: affirmation, Icon: AffirmIcon, color: affirmColor, refresh: refreshAffirmation } = useAffirmation();
+
+  // ─── Bug fix: celebration lives here, not in context ─────────────────────
+  const [celebration,    setCelebration]    = useState(null);
   const [showAdd,        setShowAdd]        = useState(false);
   const [showStreakLoss, setShowStreakLoss] = useState(false);
+
+  // Passes setCelebration as the callback so the modal fires on completion
+  const handleToggle = (task) => {
+    toggleTask(task, (data) => setCelebration(data));
+  };
 
   const todayStr      = new Date().toLocaleDateString("en-CA");
   const todayTasks    = tasks.filter(t => t.due_date && t.due_date.slice(0, 10) === todayStr);
@@ -307,16 +317,22 @@ export default function DashboardPage({ onMenuOpen }) {
           </div>
         </div>
 
+        {/* ─── Step 9: Live Affirmation Card ─────────────────────────────────── */}
         <div className="rounded-2xl p-4 mb-5 flex items-center justify-between"
           style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
           <div className="flex items-center gap-3">
-            <Star size={14} color="#6C63FF" fill="#6C63FF"/>
+            <AffirmIcon size={14} color={affirmColor} fill={affirmColor}/>
             <div>
-              <p className="text-xs font-semibold tracking-widest mb-0.5" style={{ color: "#6C63FF" }}>DAILY NUDGE</p>
-              <p className="text-white text-sm italic">"One task still counts. What is one thing you can do right now?"</p>
+              <p className="text-xs font-semibold tracking-widest mb-0.5" style={{ color: affirmColor }}>
+                DAILY NUDGE
+              </p>
+              <p className="text-white text-sm italic">"{affirmation}"</p>
             </div>
           </div>
-          <button className="text-gray-600 hover:text-gray-400 transition-colors flex-shrink-0 ml-4">
+          <button
+            onClick={refreshAffirmation}
+            title="Get a new nudge"
+            className="text-gray-600 hover:text-gray-400 transition-colors flex-shrink-0 ml-4">
             <Moon size={16}/>
           </button>
         </div>
@@ -336,7 +352,7 @@ export default function DashboardPage({ onMenuOpen }) {
                       style={{ backgroundColor: "#2a2a2a" }}>{todayTasks.filter(t => !t.done).length}</span>
                   </div>
                   <div className="space-y-2">
-                    {todayTasks.map(t => <TaskRow key={t.id} task={t} onToggle={toggleTask}/>)}
+                    {todayTasks.map(t => <TaskRow key={t.id} task={t} onToggle={handleToggle}/>)}
                   </div>
                 </div>
               )}
@@ -348,7 +364,7 @@ export default function DashboardPage({ onMenuOpen }) {
                       style={{ backgroundColor: "#2a2a2a" }}>{upcomingTasks.length}</span>
                   </div>
                   <div className="space-y-2">
-                    {upcomingTasks.map(t => <TaskRow key={t.id} task={t} onToggle={toggleTask}/>)}
+                    {upcomingTasks.map(t => <TaskRow key={t.id} task={t} onToggle={handleToggle}/>)}
                   </div>
                 </div>
               )}

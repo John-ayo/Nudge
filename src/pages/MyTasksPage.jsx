@@ -1,9 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ScrollReveal from "../components/ScrollReveal";
-import { useAuth } from "../context/AuthContext";
-import { fetchTasks, createTask, updateTask, deleteTask } from "../lib/tasks";
-import { fetchCategories } from "../lib/categories";
-import { supabase } from "../lib/supabase";
+import { useTasks } from "../context/TasksContext";
 import { PartyPopper, Flame, Zap } from "lucide-react";
 
 const MenuIcon  = () => (<svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>);
@@ -15,6 +12,7 @@ const TrashIcon = () => (<svg width="13" height="13" fill="none" stroke="current
 const PRIORITY_COLOR = { high: "#EF4444", medium: "#F59E0B", low: "#22C55E" };
 const PRIORITY_LABEL = { high: "High", medium: "Medium", low: "Low" };
 
+// ─── TaskModal (unchanged) ────────────────────────────────────────────────────
 function TaskModal({ task, onClose, onSave, categories }) {
   const editing     = !!task;
   const [title,      setTitle]      = useState(task?.title       ?? "");
@@ -43,7 +41,6 @@ function TaskModal({ task, onClose, onSave, categories }) {
           {editing ? "Edit Task" : "Add New Task"}
         </h2>
 
-        {/* Title */}
         <input
           type="text" value={title} onChange={e => setTitle(e.target.value)}
           placeholder="What needs to be done?"
@@ -54,7 +51,6 @@ function TaskModal({ task, onClose, onSave, categories }) {
         />
 
         <div className="grid grid-cols-2 gap-4 mb-4">
-          {/* Priority */}
           <div>
             <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">PRIORITY</label>
             <div className="flex gap-2">
@@ -72,7 +68,6 @@ function TaskModal({ task, onClose, onSave, categories }) {
             </div>
           </div>
 
-          {/* Est time */}
           <div>
             <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">EST. TIME (MIN)</label>
             <input
@@ -85,7 +80,6 @@ function TaskModal({ task, onClose, onSave, categories }) {
           </div>
         </div>
 
-        {/* Due date */}
         <div className="mb-4">
           <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">DUE DATE</label>
           <input
@@ -97,12 +91,9 @@ function TaskModal({ task, onClose, onSave, categories }) {
           />
         </div>
 
-        {/* Category */}
         <div className="mb-6">
           <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">CATEGORY</label>
-          <select
-            value={categoryId}
-            onChange={e => setCategoryId(e.target.value)}
+          <select value={categoryId} onChange={e => setCategoryId(e.target.value)}
             style={sel}
             onFocus={e => e.target.style.borderColor = "#6C63FF"}
             onBlur={e  => e.target.style.borderColor = "#333"}>
@@ -136,6 +127,7 @@ function TaskModal({ task, onClose, onSave, categories }) {
   );
 }
 
+// ─── TaskRow (unchanged) ──────────────────────────────────────────────────────
 function TaskRow({ task, onToggle, onEdit, onDelete, hoveredId, setHoveredId, categories }) {
   const isHovered = hoveredId === task.id;
   const category  = categories.find(c => c.id === task.category_id);
@@ -150,17 +142,14 @@ function TaskRow({ task, onToggle, onEdit, onDelete, hoveredId, setHoveredId, ca
       onMouseEnter={() => setHoveredId(task.id)}
       onMouseLeave={() => setHoveredId(null)}>
 
-      {/* Toggle */}
       <button onClick={() => onToggle(task.id)}
         className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
         style={{ borderColor: task.done ? "#6C63FF" : "#444", backgroundColor: task.done ? "#6C63FF" : "transparent" }}>
         {task.done && <svg width="10" height="10" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>}
       </button>
 
-      {/* Priority bar */}
       <div className="w-0.5 h-8 rounded-full flex-shrink-0" style={{ backgroundColor: PRIORITY_COLOR[task.priority] }}/>
 
-      {/* Content */}
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-semibold truncate ${task.done ? "line-through text-gray-600" : "text-white"}`}>
           {task.title}
@@ -182,7 +171,6 @@ function TaskRow({ task, onToggle, onEdit, onDelete, hoveredId, setHoveredId, ca
         </div>
       </div>
 
-      {/* Actions */}
       <div className={`flex items-center gap-2 flex-shrink-0 transition-opacity duration-150 ${isHovered ? "opacity-100" : "opacity-0"}`}>
         <button onClick={() => onEdit(task)}
           className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-gray-300 hover:text-white transition-all"
@@ -199,6 +187,7 @@ function TaskRow({ task, onToggle, onEdit, onDelete, hoveredId, setHoveredId, ca
   );
 }
 
+// ─── CelebrationModal (unchanged) ────────────────────────────────────────────
 function CelebrationModal({ taskTitle, xpAwarded, newStreak, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -229,95 +218,58 @@ function CelebrationModal({ taskTitle, xpAwarded, newStreak, onClose }) {
   );
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function MyTasksPage({ onMenuOpen }) {
-  const { user } = useAuth();
-  const [tasks,       setTasks]       = useState([]);
-  const [categories,  setCategories]  = useState([]);
-  const [loading,     setLoading]     = useState(true);
+  // All task data and mutations come from context now
+  const { tasks, categories, loading, toggleTask, addTask, editTask, removeTask } = useTasks();
+
+  // UI-only state stays local
   const [showAdd,     setShowAdd]     = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [hoveredId,   setHoveredId]   = useState(null);
   const [error,       setError]       = useState("");
   const [celebration, setCelebration] = useState(null);
 
-  useEffect(() => {
-    if (!user) return;
-    Promise.all([fetchTasks(user.id), fetchCategories(user.id)])
-      .then(([tasks, cats]) => { setTasks(tasks); setCategories(cats); })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [user]);
-
+  // Derived views
   const pending   = tasks.filter(t => !t.done);
   const completed = tasks.filter(t =>  t.done);
   const highPrio  = tasks.filter(t => t.priority === "high" && !t.done);
   const dueToday  = tasks.filter(t => {
     if (!t.due_date) return false;
-    return new Date(t.due_date).toDateString() === new Date().toDateString();
+    return new Date(t.due_date.slice(0, 10) + "T12:00:00").toDateString() === new Date().toDateString();
   });
 
-  const toggleTask = async (id) => {
-    const task   = tasks.find(t => t.id === id);
-    const newDone = !task.done;
+  // Celebration callback — passed into context's toggleTask
+  const handleToggle = (id) => {
+    toggleTask(id, (data) => setCelebration(data));
+  };
 
-    // Optimistic update
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: newDone } : t));
-
+  // Edit: context call + close modal
+  const handleEdit = async (data) => {
     try {
-      await updateTask(id, { done: newDone });
-
-      if (newDone) {
-        const sessionRes = await supabase.auth.getSession();
-        const session = sessionRes.data.session;
-        
-        const res = await supabase.functions.invoke("complete-task", {
-          body: { task_id: id, user_id: user.id },
-          /*headers: {
-            uthorization: `Bearer ${session.access_token}`,
-         }, */
-        });
-        if (res.error) {
-          console.error("complete-task error:", res.error);
-        }
-        if (res.data) {
-          const { xp_awarded, new_streak } = res.data;
-          setCelebration({ title: task.title, xp: xp_awarded, newStreak: new_streak });
-        }
-      }
+      await editTask(editingTask.id, data);
+      setEditingTask(null);
     } catch (err) {
-      // Revert on error
-      setTasks(prev => prev.map(t => t.id === id ? { ...t, done: task.done } : t));
       setError(err.message);
-      console.error("Toggle task error:", err);
     }
   };
 
-  const handleDelete = async (id) => {
-    await deleteTask(id);
-    setTasks(prev => prev.filter(t => t.id !== id));
-  };
-
+  // Add: context call (modal closes itself via onClose)
   const handleAdd = async (data) => {
-    const newTask = await createTask(user.id, {
-      title:       data.title,
-      priority:    data.priority,
-      est:         data.est,
-      due_date:    data.due,
-      category_id: data.category_id,
-    });
-    setTasks(prev => [newTask, ...prev]);
+    try {
+      await addTask(data);
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
-  const handleEdit = async (data) => {
-    const updated = await updateTask(editingTask.id, {
-      title:       data.title,
-      priority:    data.priority,
-      due_date:    data.due,
-      est:         data.est,
-      category_id: data.category_id,
-    });
-    setTasks(prev => prev.map(t => t.id === editingTask.id ? updated : t));
-    setEditingTask(null);
+  // Delete: context call
+  const handleDelete = async (id) => {
+    try {
+      await removeTask(id);
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const PILLS = [
@@ -348,7 +300,6 @@ export default function MyTasksPage({ onMenuOpen }) {
           style={{ backgroundColor: "#6C63FF" }}>
           <PlusIcon/>
           <span className="hidden sm:inline">New Task</span>
-          {/* <span className="sm:hidden">+</span> */ }
         </button>
       </div>
 
@@ -389,7 +340,7 @@ export default function MyTasksPage({ onMenuOpen }) {
                 <div className="space-y-2">
                   {pending.map((t, i) => (
                     <ScrollReveal key={t.id} delay={(i % 10) * 50}>
-                      <TaskRow task={t} onToggle={toggleTask} onEdit={setEditingTask} onDelete={handleDelete}
+                      <TaskRow task={t} onToggle={handleToggle} onEdit={setEditingTask} onDelete={handleDelete}
                         hoveredId={hoveredId} setHoveredId={setHoveredId} categories={categories}/>
                     </ScrollReveal>
                   ))}
@@ -409,7 +360,7 @@ export default function MyTasksPage({ onMenuOpen }) {
                 <div className="space-y-2">
                   {completed.map((t, i) => (
                     <ScrollReveal key={t.id} delay={(i % 10) * 50}>
-                      <TaskRow task={t} onToggle={toggleTask} onEdit={setEditingTask} onDelete={handleDelete}
+                      <TaskRow task={t} onToggle={handleToggle} onEdit={setEditingTask} onDelete={handleDelete}
                         hoveredId={hoveredId} setHoveredId={setHoveredId} categories={categories}/>
                     </ScrollReveal>
                   ))}

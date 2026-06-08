@@ -3,6 +3,14 @@ import { useAuth } from "./AuthContext";
 import { fetchTasks, createTask, updateTask, deleteTask } from "../lib/tasks";
 import { fetchCategories } from "../lib/categories";
 import { supabase } from "../lib/supabase";
+import { playTaskComplete, playStreakMilestone } from "../lib/sounds";
+import {
+  identifyUser,
+  trackTaskCreated,
+  trackTaskCompleted,
+  trackTaskDeleted,
+  trackTaskEdited,
+} from "../lib/analytics";
 
 const TasksContext = createContext(null);
 
@@ -15,9 +23,15 @@ export function TasksProvider({ children }) {
   const [streak,     setStreak]     = useState({ current: 0, best: 0 });
   const [loading,    setLoading]    = useState(true);
 
-  // Initial load
+  // ─── Initial load + identify user ──────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
+
+    identifyUser(user.id, {
+      email:      user.email,
+      name:       user.user_metadata?.full_name ?? null,
+      created_at: user.created_at,
+    });
 
     async function load() {
       try {
@@ -47,7 +61,7 @@ export function TasksProvider({ children }) {
     load();
   }, [user]);
 
-  // Realtime XP updates
+  // ─── Realtime XP updates ───────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
 
@@ -65,8 +79,9 @@ export function TasksProvider({ children }) {
     return () => supabase.removeChannel(channel);
   }, [user]);
 
+  // ─── toggleTask ────────────────────────────────────────────────────────────
   const toggleTask = useCallback(async (taskOrId, onCelebration) => {
-    const task   = typeof taskOrId === "object" ? taskOrId : tasks.find(t => t.id === taskOrId);
+    const task    = typeof taskOrId === "object" ? taskOrId : tasks.find(t => t.id === taskOrId);
     const newDone = !task.done;
 
     setTasks(prev => prev.map(t => t.id === task.id ? { ...t, done: newDone } : t));
@@ -85,6 +100,20 @@ export function TasksProvider({ children }) {
           const { xp_awarded, new_streak } = res.data;
           setStreak(prev => ({ ...prev, current: new_streak, best: Math.max(new_streak, prev.best) }));
           onCelebration?.({ title: task.title, xp: xp_awarded, newStreak: new_streak });
+
+          // Sounds
+          playTaskComplete();
+          if ([7, 14, 21, 30, 60, 100].includes(new_streak)) {
+            playStreakMilestone();
+          }
+
+          // Analytics
+          trackTaskCompleted({
+            task_id:    task.id,
+            priority:   task.priority,
+            xp_awarded,
+            new_streak,
+          });
         }
       }
     } catch (err) {
@@ -93,6 +122,7 @@ export function TasksProvider({ children }) {
     }
   }, [tasks, user]);
 
+  // ─── addTask ───────────────────────────────────────────────────────────────
   const addTask = useCallback(async (data) => {
     const newTask = await createTask(user.id, {
       title:       data.title,
@@ -101,11 +131,23 @@ export function TasksProvider({ children }) {
       due_date:    data.due_date ?? data.due ?? null,
       category_id: data.category_id ?? null,
     });
+
     setTasks(prev => [newTask, ...prev]);
+
+    trackTaskCreated({
+      priority:     data.priority,
+      has_category: !!data.category_id,
+      has_due_date: !!(data.due_date ?? data.due),
+      est:          data.est ?? null,
+    });
+
     return newTask;
   }, [user]);
 
+  // ─── editTask ──────────────────────────────────────────────────────────────
   const editTask = useCallback(async (taskId, data) => {
+    const original = tasks.find(t => t.id === taskId);
+
     const updated = await updateTask(taskId, {
       title:       data.title,
       priority:    data.priority,
@@ -113,14 +155,33 @@ export function TasksProvider({ children }) {
       est:         data.est,
       category_id: data.category_id ?? null,
     });
-    setTasks(prev => prev.map(t => t.id === taskId ? updated : t));
-    return updated;
-  }, []);
 
+    setTasks(prev => prev.map(t => t.id === taskId ? updated : t));
+
+    if (original) {
+      const changed_fields = Object.keys(data).filter(k => {
+        const key = k === "due" ? "due_date" : k;
+        return original[key] !== data[k];
+      });
+      if (changed_fields.length > 0) {
+        trackTaskEdited({ task_id: taskId, changed_fields });
+      }
+    }
+
+    return updated;
+  }, [tasks]);
+
+  // ─── removeTask ────────────────────────────────────────────────────────────
   const removeTask = useCallback(async (taskId) => {
+    const task = tasks.find(t => t.id === taskId);
     await deleteTask(taskId);
     setTasks(prev => prev.filter(t => t.id !== taskId));
-  }, []);
+
+    trackTaskDeleted({
+      task_id:  taskId,
+      priority: task?.priority ?? null,
+    });
+  }, [tasks]);
 
   return (
     <TasksContext.Provider value={{

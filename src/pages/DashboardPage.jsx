@@ -1,11 +1,13 @@
 import { useState } from "react";
 import {
-  Menu, Plus, Play, Clock, Star, Moon,
+  Menu, Plus, Play, Clock, Moon,
   Flame, Zap, Trophy, Rocket, PartyPopper,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTasks } from "../context/TasksContext";
 import { useAffirmation } from "../hooks/useAffirmation";
+import { trackCelebrationDismissed } from "../lib/analytics";
 
 const PRIORITY_COLOR = { high: "#EF4444", medium: "#F59E0B", low: "#22C55E" };
 
@@ -32,7 +34,7 @@ function AddTaskModal({ onClose, onAdd, categories }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
       <div className="w-full max-w-lg rounded-2xl p-8"
-        style={{ backgroundColor: "#1a1a1a", border: "1px solid #6C63FF" }}>
+        style={{ backgroundColor: "#1a1a1a", border: "1px solid var(--accent)" }}>
         <h2 className="text-xl font-bold text-white mb-6" style={{ fontFamily: "'Syne',sans-serif" }}>
           Add New Task
         </h2>
@@ -40,14 +42,14 @@ function AddTaskModal({ onClose, onAdd, categories }) {
           placeholder="What needs to be done?"
           className="w-full rounded-2xl px-4 py-3 text-sm text-white placeholder-gray-500 outline-none mb-5"
           style={{ backgroundColor: "#111", border: "1px solid #333" }}
-          onFocus={e => e.target.style.borderColor = "#6C63FF"}
+          onFocus={e => e.target.style.borderColor = "var(--accent)"}
           onBlur={e  => e.target.style.borderColor = "#333"}/>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">CATEGORY</label>
             <select value={categoryId} onChange={e => setCategoryId(e.target.value)} style={sel}
-              onFocus={e => e.target.style.borderColor = "#6C63FF"}
+              onFocus={e => e.target.style.borderColor = "var(--accent)"}
               onBlur={e  => e.target.style.borderColor = "#333"}>
               <option value="">No category</option>
               {categories.map(c => (
@@ -77,7 +79,7 @@ function AddTaskModal({ onClose, onAdd, categories }) {
             <input type="number" value={est} onChange={e => setEst(e.target.value)}
               className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none"
               style={{ backgroundColor: "#111", border: "1px solid #333" }}
-              onFocus={e => e.target.style.borderColor = "#6C63FF"}
+              onFocus={e => e.target.style.borderColor = "var(--accent)"}
               onBlur={e  => e.target.style.borderColor = "#333"}/>
           </div>
           <div>
@@ -85,7 +87,7 @@ function AddTaskModal({ onClose, onAdd, categories }) {
             <input type="date" value={due} onChange={e => setDue(e.target.value)}
               className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none"
               style={{ backgroundColor: "#111", border: "1px solid #333", colorScheme: "dark" }}
-              onFocus={e => e.target.style.borderColor = "#6C63FF"}
+              onFocus={e => e.target.style.borderColor = "var(--accent)"}
               onBlur={e  => e.target.style.borderColor = "#333"}/>
           </div>
         </div>
@@ -99,7 +101,7 @@ function AddTaskModal({ onClose, onAdd, categories }) {
               }
             }}
             className="flex-1 rounded-2xl py-3 text-sm font-bold text-white hover:opacity-90 transition-all"
-            style={{ backgroundColor: "#6C63FF" }}>
+            style={{ backgroundColor: "var(--accent)" }}>
             Add Task
           </button>
           <button onClick={onClose}
@@ -119,7 +121,7 @@ function CelebrationModal({ taskTitle, xpAwarded, newStreak, onClose }) {
       style={{ backgroundColor: "rgba(0,0,0,0.8)" }} onClick={onClose}>
       <div className="w-full max-w-md rounded-2xl p-10 text-center"
         style={{ backgroundColor: "#1a1a1a", border: "1px solid #2a2a2a" }}>
-        <div className="flex justify-center mb-4"><PartyPopper size={56} color="#6C63FF"/></div>
+        <div className="flex justify-center mb-4"><PartyPopper size={56} color="var(--accent)"/></div>
         <h2 className="text-4xl font-bold mb-2" style={{ fontFamily: "'Syne',sans-serif", color: "#F59E0B" }}>
           WELL DONE!
         </h2>
@@ -129,7 +131,7 @@ function CelebrationModal({ taskTitle, xpAwarded, newStreak, onClose }) {
         </p>
         <div className="flex gap-3 justify-center mb-4">
           <span className="rounded-full px-4 py-2 text-sm font-bold text-white flex items-center gap-1.5"
-            style={{ backgroundColor: "#6C63FF" }}>
+            style={{ backgroundColor: "var(--accent)" }}>
             <Zap size={14}/> +{xpAwarded} XP
           </span>
           <span className="rounded-full px-4 py-2 text-sm font-bold text-white flex items-center gap-1.5"
@@ -159,7 +161,7 @@ function StreakLossModal({ onClose }) {
         </p>
         <button onClick={onClose}
           className="w-full rounded-2xl py-3 text-sm font-bold text-white mb-3 hover:opacity-90 transition-all"
-          style={{ backgroundColor: "#6C63FF" }}>
+          style={{ backgroundColor: "var(--accent)" }}>
           I'm Ready
         </button>
         <button onClick={onClose} className="text-gray-500 text-sm hover:text-gray-300 transition-colors">
@@ -170,13 +172,14 @@ function StreakLossModal({ onClose }) {
   );
 }
 
-function TaskRow({ task, onToggle }) {
+// ─── TaskRow - now accepts onFocus ────────────────────────────────────────────
+function TaskRow({ task, onToggle, onFocus }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl px-4 py-3 transition-all"
       style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a", opacity: task.done ? 0.5 : 1 }}>
       <button onClick={() => onToggle(task)}
         className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
-        style={{ borderColor: task.done ? "#6C63FF" : "#444", backgroundColor: task.done ? "#6C63FF" : "transparent" }}>
+        style={{ borderColor: task.done ? "var(--accent)" : "#444", backgroundColor: task.done ? "var(--accent)" : "transparent" }}>
         {task.done && <svg width="10" height="10" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>}
       </button>
       <div className="w-0.5 h-8 rounded-full flex-shrink-0" style={{ backgroundColor: PRIORITY_COLOR[task.priority] }}/>
@@ -190,7 +193,9 @@ function TaskRow({ task, onToggle }) {
         </p>
       </div>
       {!task.done && (
-        <button className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold text-gray-300 hover:text-white transition-all flex-shrink-0"
+        <button
+          onClick={() => onFocus(task)}
+          className="flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold text-gray-300 hover:text-white transition-all flex-shrink-0"
           style={{ backgroundColor: "#2a2a2a", border: "1px solid #333" }}>
           <Play size={10}/> Focus
         </button>
@@ -201,22 +206,29 @@ function TaskRow({ task, onToggle }) {
 
 export default function DashboardPage({ onMenuOpen }) {
   const { user } = useAuth();
+  const navigate  = useNavigate();
   const {
     tasks, categories, totalXP, streak,
     loading, toggleTask, addTask,
   } = useTasks();
 
-  // ─── Step 9: Affirmation Engine ───────────────────────────────────────────
   const { message: affirmation, Icon: AffirmIcon, color: affirmColor, refresh: refreshAffirmation } = useAffirmation();
 
-  // ─── Bug fix: celebration lives here, not in context ─────────────────────
   const [celebration,    setCelebration]    = useState(null);
   const [showAdd,        setShowAdd]        = useState(false);
   const [showStreakLoss, setShowStreakLoss] = useState(false);
 
-  // Passes setCelebration as the callback so the modal fires on completion
   const handleToggle = (task) => {
     toggleTask(task, (data) => setCelebration(data));
+  };
+
+  const handleCelebrationClose = () => {
+    trackCelebrationDismissed({ xp: celebration.xp, streak: celebration.newStreak, page: "dashboard" });
+    setCelebration(null);
+  };
+
+  const handleFocus = (task) => {
+    navigate("/focus", { state: { task } });
   };
 
   const todayStr      = new Date().toLocaleDateString("en-CA");
@@ -256,7 +268,7 @@ export default function DashboardPage({ onMenuOpen }) {
         </div>
         <button onClick={() => setShowAdd(true)}
           className="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 transition-all flex-shrink-0"
-          style={{ backgroundColor: "#6C63FF" }}>
+          style={{ backgroundColor: "var(--accent)" }}>
           <Plus size={16}/>
           <span className="hidden sm:inline">New Task</span>
         </button>
@@ -272,11 +284,11 @@ export default function DashboardPage({ onMenuOpen }) {
                 {doneCount}<span className="text-gray-500 text-xl font-normal">/{totalCount}</span>
               </p>
               <p className="text-gray-400 text-xs">tasks completed</p>
-              <div className="h-0.5 w-24 rounded mt-3" style={{ backgroundColor: "#6C63FF" }}/>
+              <div className="h-0.5 w-24 rounded mt-3" style={{ backgroundColor: "var(--accent)" }}/>
             </div>
             <svg width="56" height="56" viewBox="0 0 56 56">
               <circle cx="28" cy="28" r={r} fill="none" stroke="#2a2a2a" strokeWidth="4"/>
-              <circle cx="28" cy="28" r={r} fill="none" stroke="#6C63FF" strokeWidth="4"
+              <circle cx="28" cy="28" r={r} fill="none" stroke="var(--accent)" strokeWidth="4"
                 strokeDasharray={circ} strokeDashoffset={dash} strokeLinecap="round"
                 transform="rotate(-90 28 28)" style={{ transition: "stroke-dashoffset 0.5s ease" }}/>
             </svg>
@@ -299,7 +311,7 @@ export default function DashboardPage({ onMenuOpen }) {
 
           <div className="rounded-2xl p-5" style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
             <p className="text-gray-400 text-xs font-semibold tracking-widest mb-2">TOTAL XP</p>
-            <p className="text-3xl font-bold mb-3" style={{ color: "#6C63FF" }}>
+            <p className="text-3xl font-bold mb-3" style={{ color: "var(--accent)" }}>
               +{totalXP} <span className="text-gray-500 text-sm font-normal">points</span>
             </p>
             <div className="flex flex-wrap gap-2">
@@ -317,7 +329,7 @@ export default function DashboardPage({ onMenuOpen }) {
           </div>
         </div>
 
-        {/* ─── Step 9: Live Affirmation Card ─────────────────────────────────── */}
+        {/* Affirmation Card */}
         <div className="rounded-2xl p-4 mb-5 flex items-center justify-between"
           style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
           <div className="flex items-center gap-3">
@@ -329,9 +341,7 @@ export default function DashboardPage({ onMenuOpen }) {
               <p className="text-white text-sm italic">"{affirmation}"</p>
             </div>
           </div>
-          <button
-            onClick={refreshAffirmation}
-            title="Get a new nudge"
+          <button onClick={refreshAffirmation} title="Get a new nudge"
             className="text-gray-600 hover:text-gray-400 transition-colors flex-shrink-0 ml-4">
             <Moon size={16}/>
           </button>
@@ -339,7 +349,7 @@ export default function DashboardPage({ onMenuOpen }) {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-[#6C63FF] border-t-transparent rounded-full animate-spin"/>
+            <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"/>
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-5">
@@ -352,7 +362,9 @@ export default function DashboardPage({ onMenuOpen }) {
                       style={{ backgroundColor: "#2a2a2a" }}>{todayTasks.filter(t => !t.done).length}</span>
                   </div>
                   <div className="space-y-2">
-                    {todayTasks.map(t => <TaskRow key={t.id} task={t} onToggle={handleToggle}/>)}
+                    {todayTasks.map(t => (
+                      <TaskRow key={t.id} task={t} onToggle={handleToggle} onFocus={handleFocus}/>
+                    ))}
                   </div>
                 </div>
               )}
@@ -364,7 +376,9 @@ export default function DashboardPage({ onMenuOpen }) {
                       style={{ backgroundColor: "#2a2a2a" }}>{upcomingTasks.length}</span>
                   </div>
                   <div className="space-y-2">
-                    {upcomingTasks.map(t => <TaskRow key={t.id} task={t} onToggle={handleToggle}/>)}
+                    {upcomingTasks.map(t => (
+                      <TaskRow key={t.id} task={t} onToggle={handleToggle} onFocus={handleFocus}/>
+                    ))}
                   </div>
                 </div>
               )}
@@ -402,7 +416,7 @@ export default function DashboardPage({ onMenuOpen }) {
           taskTitle={celebration.title}
           xpAwarded={celebration.xp}
           newStreak={celebration.newStreak}
-          onClose={() => setCelebration(null)}
+          onClose={handleCelebrationClose}
         />
       )}
       {showStreakLoss && <StreakLossModal onClose={() => setShowStreakLoss(false)}/>}

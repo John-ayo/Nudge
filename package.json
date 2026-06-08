@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.106.0",
     "@tailwindcss/postcss": "^4.3.0",
+    "posthog-js": "^1.382.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.15.0"

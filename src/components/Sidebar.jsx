@@ -5,6 +5,7 @@ import {
   Calendar, Settings, User, X, Flame, Zap,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useAccent } from "../context/AccentContext";
 import { getTotalXP } from "../lib/xp";
 import { getStreak } from "../lib/streaks";
 import { supabase } from "../lib/supabase";
@@ -18,7 +19,6 @@ const NAV = [
   { label: "Account",    Icon: User,            path: "/account"    },
 ];
 
-// XP thresholds per level - every 500 XP = 1 level
 function getLevel(totalXP) {
   return Math.floor(totalXP / 500) + 1;
 }
@@ -30,14 +30,14 @@ function getLevelXP(totalXP) {
 
 export default function Sidebar({ open, onClose }) {
   const { user }    = useAuth();
+  const { accent }  = useAccent();
   const navigate    = useNavigate();
   const location    = useLocation();
 
-  const [totalXP,  setTotalXP]  = useState(0);
-  const [todayXP,  setTodayXP]  = useState(0);
-  const [streak,   setStreak]   = useState(0);
+  const [totalXP, setTotalXP] = useState(0);
+  const [todayXP, setTodayXP] = useState(0);
+  const [streak,  setStreak]  = useState(0);
 
-  // Fetch real XP and streak on mount
   useEffect(() => {
     if (!user) return;
 
@@ -50,7 +50,6 @@ export default function Sidebar({ open, onClose }) {
         setTotalXP(total);
         setStreak(streakData?.current ?? 0);
 
-        // Today XP
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
         const { data } = await supabase
@@ -70,7 +69,7 @@ export default function Sidebar({ open, onClose }) {
     load();
   }, [user]);
 
-  // Realtime: update XP + todayXP live when a task is completed
+  // Realtime XP
   useEffect(() => {
     if (!user) return;
 
@@ -90,7 +89,7 @@ export default function Sidebar({ open, onClose }) {
     return () => supabase.removeChannel(channel);
   }, [user]);
 
-  // Realtime: update streak live
+  // Realtime streak
   useEffect(() => {
     if (!user) return;
 
@@ -108,11 +107,11 @@ export default function Sidebar({ open, onClose }) {
     return () => supabase.removeChannel(channel);
   }, [user]);
 
-  const level         = getLevel(totalXP);
+  const level                           = getLevel(totalXP);
   const { current: levelXP, max: levelMax } = getLevelXP(totalXP);
-  const xpPct         = Math.min((levelXP / levelMax) * 100, 100);
-  const name          = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
-  const handleNav     = path => { navigate(path); onClose?.(); };
+  const xpPct                           = Math.min((levelXP / levelMax) * 100, 100);
+  const name                            = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const handleNav                       = path => { navigate(path); onClose?.(); };
 
   return (
     <>
@@ -130,7 +129,7 @@ export default function Sidebar({ open, onClose }) {
           <button onClick={() => handleNav("/dashboard")}>
             <span className="text-xl font-bold" style={{ fontFamily: "'Syne',sans-serif" }}>
               <span className="text-white">Nudge</span>
-              <span style={{ color: "#6C63FF" }}>.</span>
+              <span style={{ color: accent }}>.</span>
             </span>
           </button>
           <button onClick={onClose} className="lg:hidden text-gray-500 hover:text-white transition-colors">
@@ -146,7 +145,7 @@ export default function Sidebar({ open, onClose }) {
               <button key={label} onClick={() => handleNav(path)}
                 className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
                 style={{
-                  backgroundColor: isActive ? "#6C63FF" : "transparent",
+                  backgroundColor: isActive ? accent : "transparent",
                   color: isActive ? "#fff" : "#9CA3AF",
                 }}>
                 <Icon size={16}/>
@@ -160,7 +159,7 @@ export default function Sidebar({ open, onClose }) {
         <div className="p-4 border-t" style={{ borderColor: "#1f1f1f" }}>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-              style={{ backgroundColor: "#6C63FF" }}>
+              style={{ backgroundColor: accent }}>
               {name.charAt(0).toUpperCase()}
             </div>
             <div>
@@ -176,7 +175,7 @@ export default function Sidebar({ open, onClose }) {
           </div>
           <div className="h-1.5 rounded-full mb-3" style={{ backgroundColor: "#1f1f1f" }}>
             <div className="h-1.5 rounded-full transition-all duration-500"
-              style={{ width: `${xpPct}%`, backgroundColor: "#6C63FF" }}/>
+              style={{ width: `${xpPct}%`, backgroundColor: accent }}/>
           </div>
 
           {/* Streak + XP today */}
@@ -187,8 +186,8 @@ export default function Sidebar({ open, onClose }) {
               <div className="text-gray-500 text-xs">streak</div>
             </div>
             <div className="rounded-xl p-2.5 text-center" style={{ backgroundColor: "#161616" }}>
-              <div className="flex justify-center mb-1"><Zap size={18} color="#6C63FF"/></div>
-              <div className="font-bold text-sm" style={{ color: "#6C63FF" }}>{todayXP}</div>
+              <div className="flex justify-center mb-1"><Zap size={18} color={accent}/></div>
+              <div className="font-bold text-sm" style={{ color: accent }}>{todayXP}</div>
               <div className="text-gray-500 text-xs">XP today</div>
             </div>
           </div>

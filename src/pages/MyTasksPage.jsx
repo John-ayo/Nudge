@@ -36,7 +36,7 @@ function TaskModal({ task, onClose, onSave, categories }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
       <div className="w-full max-w-lg rounded-2xl p-8"
-        style={{ backgroundColor: "#1a1a1a", border: "1px solid #6C63FF" }}>
+        style={{ backgroundColor: "#1a1a1a", border: "1px solid var(--accent)" }}>
         <h2 className="text-xl font-bold text-white mb-6" style={{ fontFamily: "'Syne',sans-serif" }}>
           {editing ? "Edit Task" : "Add New Task"}
         </h2>
@@ -46,7 +46,7 @@ function TaskModal({ task, onClose, onSave, categories }) {
           placeholder="What needs to be done?"
           className="w-full rounded-2xl px-4 py-3 text-sm text-white placeholder-gray-500 outline-none mb-5"
           style={{ backgroundColor: "#111", border: "1px solid #333" }}
-          onFocus={e => e.target.style.borderColor = "#6C63FF"}
+          onFocus={e => e.target.style.borderColor = "var(--accent)"}
           onBlur={e  => e.target.style.borderColor = "#333"}
         />
 
@@ -74,7 +74,7 @@ function TaskModal({ task, onClose, onSave, categories }) {
               type="number" value={est} onChange={e => setEst(e.target.value)}
               className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none"
               style={{ backgroundColor: "#111", border: "1px solid #333" }}
-              onFocus={e => e.target.style.borderColor = "#6C63FF"}
+              onFocus={e => e.target.style.borderColor = "var(--accent)"}
               onBlur={e  => e.target.style.borderColor = "#333"}
             />
           </div>
@@ -86,7 +86,7 @@ function TaskModal({ task, onClose, onSave, categories }) {
             type="date" value={due} onChange={e => setDue(e.target.value)}
             className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none"
             style={{ backgroundColor: "#111", border: "1px solid #333", colorScheme: "dark" }}
-            onFocus={e => e.target.style.borderColor = "#6C63FF"}
+            onFocus={e => e.target.style.borderColor = "var(--accent)"}
             onBlur={e  => e.target.style.borderColor = "#333"}
           />
         </div>
@@ -95,7 +95,7 @@ function TaskModal({ task, onClose, onSave, categories }) {
           <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">CATEGORY</label>
           <select value={categoryId} onChange={e => setCategoryId(e.target.value)}
             style={sel}
-            onFocus={e => e.target.style.borderColor = "#6C63FF"}
+            onFocus={e => e.target.style.borderColor = "var(--accent)"}
             onBlur={e  => e.target.style.borderColor = "#333"}>
             <option value="">No category</option>
             {categories.map(c => (
@@ -113,7 +113,7 @@ function TaskModal({ task, onClose, onSave, categories }) {
               }
             }}
             className="flex-1 rounded-2xl py-3 text-sm font-bold text-white hover:opacity-90 transition-all"
-            style={{ backgroundColor: "#6C63FF" }}>
+            style={{ backgroundColor: "var(--accent)" }}>
             {editing ? "Save Changes" : "Add Task"}
           </button>
           <button onClick={onClose}
@@ -144,7 +144,7 @@ function TaskRow({ task, onToggle, onEdit, onDelete, hoveredId, setHoveredId, ca
 
       <button onClick={() => onToggle(task.id)}
         className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
-        style={{ borderColor: task.done ? "#6C63FF" : "#444", backgroundColor: task.done ? "#6C63FF" : "transparent" }}>
+        style={{ borderColor: task.done ? "var(--accent)" : "#444", backgroundColor: task.done ? "var(--accent)" : "transparent" }}>
         {task.done && <svg width="10" height="10" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>}
       </button>
 
@@ -194,7 +194,7 @@ function CelebrationModal({ taskTitle, xpAwarded, newStreak, onClose }) {
       style={{ backgroundColor: "rgba(0,0,0,0.8)" }} onClick={onClose}>
       <div className="w-full max-w-md rounded-2xl p-10 text-center"
         style={{ backgroundColor: "#1a1a1a", border: "1px solid #2a2a2a" }}>
-        <div className="flex justify-center mb-4"><PartyPopper size={56} color="#6C63FF"/></div>
+        <div className="flex justify-center mb-4"><PartyPopper size={56} color="var(--accent)"/></div>
         <h2 className="text-4xl font-bold mb-2" style={{ fontFamily: "'Syne',sans-serif", color: "#F59E0B" }}>
           WELL DONE!
         </h2>
@@ -204,7 +204,7 @@ function CelebrationModal({ taskTitle, xpAwarded, newStreak, onClose }) {
         </p>
         <div className="flex gap-3 justify-center mb-4">
           <span className="rounded-full px-4 py-2 text-sm font-bold text-white flex items-center gap-1.5"
-            style={{ backgroundColor: "#6C63FF" }}>
+            style={{ backgroundColor: "var(--accent)ccent)" }}>
             <Zap size={14}/> +{xpAwarded} XP
           </span>
           <span className="rounded-full px-4 py-2 text-sm font-bold text-white flex items-center gap-1.5"
@@ -297,7 +297,7 @@ export default function MyTasksPage({ onMenuOpen }) {
         </div>
         <button onClick={() => setShowAdd(true)}
           className="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 transition-all"
-          style={{ backgroundColor: "#6C63FF" }}>
+          style={{ backgroundColor: "var(--accent)" }}>
           <PlusIcon/>
           <span className="hidden sm:inline">New Task</span>
         </button>
@@ -315,7 +315,7 @@ export default function MyTasksPage({ onMenuOpen }) {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-[#6C63FF] border-t-transparent rounded-full animate-spin"/>
+            <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"/>
           </div>
         ) : (
           <>

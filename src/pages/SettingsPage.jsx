@@ -1,3 +1,4 @@
+import { useAccent } from "../context/AccentContext";
 import { useState, useEffect, useCallback } from "react";
 import {
   fetchSettings,
@@ -26,8 +27,9 @@ const FOCUS_OPTIONS = [
   { label: "60m", value: 60 },
 ];
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
-function Toggle({ on, onChange, accent = "#6C63FF" }) {
+
+// ─── Sub-components ────
+function Toggle({ on, onChange, accent = "var(--accent)" }) {
   return (
     <button
       onClick={() => onChange(!on)}
@@ -121,6 +123,7 @@ function Toast({ message, type }) {
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function SettingsPage({ onMenuOpen, user }) {
   // Loading / saving states
+  const { updateAccent } = useAccent();
   const [pageLoading, setPageLoading]   = useState(true);
   const [saving,      setSaving]        = useState(false);
   const [toast,       setToast]         = useState(null); // { message, type }
@@ -144,7 +147,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
   const [reminderTime, setReminderTime] = useState("08:00");
 
   // Appearance
-  const [accent, setAccent] = useState("#6C63FF");
+  const [accent, setAccent] = useState("var(--accent)");
 
   // Productivity
   const [dailyGoal,  setDailyGoal]  = useState(5);
@@ -175,7 +178,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
             celebrationSfx: s.notification_celebration_sfx ?? true,
           });
           setReminderTime(s.reminder_time ?? "08:00");
-          setAccent(s.accent_color ?? "#6C63FF");
+          setAccent(s.accent_color ?? "var(--accent)");
           setDailyGoal(s.daily_goal ?? 5);
           setFocusMins(s.focus_mins ?? 25);
         }
@@ -189,6 +192,16 @@ export default function SettingsPage({ onMenuOpen, user }) {
 
     load();
   }, [user?.id]);
+
+  // Propagate accent globally whenever it changes
+  useEffect(() => {
+   updateAccent(accent);
+  }, [accent]);
+
+  // Persist sfx preference to localStorage so sounds.js can read it
+  useEffect(() => {
+   localStorage.setItem("nudge_sfx", notifs.celebrationSfx ? "true" : "false");
+  }, [notifs.celebrationSfx]);
 
   // ── Toast helper ────────────────────────────────────────────────────────
   const showToast = useCallback((message, type = "success") => {

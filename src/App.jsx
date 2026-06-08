@@ -14,6 +14,7 @@ import ProfilePage    from "./pages/ProfilePage";
 import SettingsPage   from "./pages/SettingsPage";
 import NotFoundPage   from "./pages/NotFoundPage";
 import ServerErrorPage from "./pages/ServerErrorPage";
+import FocusPage from "./pages/FocusPage";
 
 // Shared component
 import Sidebar from "./components/Sidebar";
@@ -61,7 +62,7 @@ function AppShell() {
             <Route path="/login"  element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/500"    element={<ServerErrorPage />} />
-
+            <Route path="/focus"  element={<FocusPage />} />
             {/* Protected */}
             <Route path="/dashboard"  element={<ProtectedRoute><DashboardPage  onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
             <Route path="/tasks"      element={<ProtectedRoute><MyTasksPage    onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />

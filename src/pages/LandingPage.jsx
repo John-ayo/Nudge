@@ -9,7 +9,7 @@ const C = {
   black: "#000000",
   surface: "#0D0D0D",
   card: "#111111",
-  purple: "#6C63FF",
+  purple: "var(--accent)",
   purpleDim: "#3D3870",
   purpleLight: "#A89EFF",
   green: "#00E896",

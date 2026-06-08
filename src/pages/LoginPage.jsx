@@ -61,7 +61,7 @@ export default function LoginPage() {
         <div
           className="absolute bottom-0 left-0 w-96 h-96 pointer-events-none opacity-15"
           style={{
-            background: "radial-gradient(circle,#6C63FF 0%,transparent 70%)",
+            background: "radial-gradient(circle,var(--accent)ccent) 0%,transparent 70%)",
             transform: "translate(-35%,35%)",
           }}
         />
@@ -69,7 +69,7 @@ export default function LoginPage() {
         <div className="relative z-10">
           <span className="text-2xl font-bold" style={{ fontFamily: "'Syne',sans-serif" }}>
             <span className="text-white">Nudge</span>
-            <span style={{ color: "#6C63FF" }}>.</span>
+            <span style={{ color: "var(--accent)" }}>.</span>
           </span>
         </div>
 
@@ -112,7 +112,7 @@ export default function LoginPage() {
           </h1>
           <p className="text-[#666] text-sm mb-8">
             Don't have an account?{" "}
-            <Link to="/signup" className="text-[#6C63FF] hover:text-[#8B85FF] transition-colors">
+            <Link to="/signup" className="text-[var(--accent)] hover:text-[#8B85FF] transition-colors">
               Sign up
             </Link>
           </p>
@@ -129,7 +129,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={handleGoogle}
-            className="w-full rounded-2xl py-3 px-4 flex items-center justify-center gap-3 text-sm font-medium text-white border border-[#2a2a2a] hover:border-[#6C63FF]/40 transition-all duration-200 mb-6"
+            className="w-full rounded-2xl py-3 px-4 flex items-center justify-center gap-3 text-sm font-medium text-white border border-[#2a2a2a] hover:border-[var(--accent)]/40 transition-all duration-200 mb-6"
             style={{ backgroundColor: "#161616" }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
@@ -158,7 +158,7 @@ export default function LoginPage() {
                 required
                 className={inputBase}
                 style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}
-                onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)"; }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--accent)"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "#2a2a2a"; e.target.style.boxShadow = "none"; }}
               />
             </div>
@@ -173,7 +173,7 @@ export default function LoginPage() {
                 required
                 className={inputBase}
                 style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}
-                onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)"; }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--accent)"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "#2a2a2a"; e.target.style.boxShadow = "none"; }}
               />
               <div className="flex justify-end mt-1">
@@ -187,7 +187,7 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="w-full rounded-2xl py-3 text-sm font-bold text-white transition-all duration-200 mt-2 hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: "#6C63FF" }}
+              style={{ backgroundColor: "var(--accent)" }}
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

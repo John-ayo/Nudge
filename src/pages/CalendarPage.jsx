@@ -7,7 +7,7 @@ const ChevLeftIcon  = () => (<svg width="16" height="16" fill="none" stroke="cur
 const ChevRightIcon = () => (<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>);
 
 const CATEGORIES = [
-  { name:"Work",     color:"#6C63FF" },
+  { name:"Work",     color:"var(--accent)" },
   { name:"Dev",      color:"#EC4899" },
   { name:"Study",    color:"#10B981" },
   { name:"Personal", color:"#8B5CF6" },
@@ -16,11 +16,11 @@ const CATEGORIES = [
 ];
 
 const TASKS_BY_DATE = {
-  "2026-05-03": [{ id:1, title:"Finish project proposal draft", category:"work",   catColor:"#6C63FF", done:false, priority:"high"   }],
+  "2026-05-03": [{ id:1, title:"Finish project proposal draft", category:"work",   catColor:"var(--accent)", done:false, priority:"high"   }],
   "2026-05-06": [
-    { id:2, title:"Finish project proposal draft", category:"work",   catColor:"#6C63FF", done:false, priority:"high"   },
+    { id:2, title:"Finish project proposal draft", category:"work",   catColor:"var(--accent)", done:false, priority:"high"   },
     { id:3, title:"Review pull request #42",        category:"Dev",    catColor:"#EC4899", done:false, priority:"medium" },
-    { id:4, title:"Reply to client emails",         category:"work",   catColor:"#6C63FF", done:true,  priority:"medium" },
+    { id:4, title:"Reply to client emails",         category:"work",   catColor:"var(--accent)", done:true,  priority:"medium" },
     { id:5, title:"Debug Api endpoint",             category:"Dev",    catColor:"#EC4899", done:false, priority:"high"   },
   ],
   "2026-05-12": [{ id:6, title:"Read chapter three of GET 203", category:"Study",  catColor:"#10B981", done:false, priority:"low"    }],
@@ -33,7 +33,7 @@ const TASKS_BY_DATE = {
 const MONTH_NAMES    = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DAY_NAMES      = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const PRIORITY_COLOR = { high:"#EF4444", medium:"#F59E0B", low:"#22C55E" };
-const CAT_COLORS     = { Work:"#6C63FF", Dev:"#EC4899", Study:"#10B981", Personal:"#8B5CF6", Health:"#F59E0B", Creative:"#22C55E" };
+const CAT_COLORS     = { Work:"var(--accent)", Dev:"#EC4899", Study:"#10B981", Personal:"#8B5CF6", Health:"#F59E0B", Creative:"#22C55E" };
 
 function toKey(y,m,d) { return `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`; }
 function daysInMonth(y,m) { return new Date(y,m+1,0).getDate(); }
@@ -46,14 +46,14 @@ function AddTaskModal({ date, onClose, onAdd }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor:"rgba(0,0,0,0.8)" }}>
-      <div className="w-full max-w-md rounded-2xl p-7" style={{ backgroundColor:"#1a1a1a", border:"1px solid #6C63FF" }}>
+      <div className="w-full max-w-md rounded-2xl p-7" style={{ backgroundColor:"#1a1a1a", border:"1px solid var(--accent)" }}>
         <h2 className="text-lg font-bold text-white mb-1" style={{ fontFamily:"'Syne',sans-serif" }}>Add Task</h2>
         <p className="text-gray-500 text-xs mb-5">{date}</p>
         <input type="text" value={title} onChange={e=>setTitle(e.target.value)}
           placeholder="What needs to be done?"
           className="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none mb-4"
           style={{ backgroundColor:"#111", border:"1px solid #333" }}
-          onFocus={e=>e.target.style.borderColor="#6C63FF"} onBlur={e=>e.target.style.borderColor="#333"}
+          onFocus={e=>e.target.style.borderColor="var(--accent)"} onBlur={e=>e.target.style.borderColor="#333"}
         />
         <div className="grid grid-cols-2 gap-3 mb-5">
           <div>
@@ -81,7 +81,7 @@ function AddTaskModal({ date, onClose, onAdd }) {
         </div>
         <div className="flex gap-3">
           <button onClick={()=>{ if(title.trim()){ onAdd(date,{title,category,priority}); onClose(); } }}
-            className="flex-1 rounded-2xl py-2.5 text-sm font-bold text-white hover:opacity-90 transition-all" style={{ backgroundColor:"#6C63FF" }}>Add Task</button>
+            className="flex-1 rounded-2xl py-2.5 text-sm font-bold text-white hover:opacity-90 transition-all" style={{ backgroundColor:"var(--accent)" }}>Add Task</button>
           <button onClick={onClose} className="flex-1 rounded-2xl py-2.5 text-sm font-medium text-gray-400 hover:text-white transition-all"
             style={{ backgroundColor:"transparent", border:"1px solid #333" }}>Cancel</button>
         </div>
@@ -112,7 +112,7 @@ export default function CalendarPage({ onMenuOpen, user }) {
   };
 
   const addTask = (dateKey,data) => {
-    setTasks(prev=>({...prev,[dateKey]:[...(prev[dateKey]??[]),{id:Date.now(),title:data.title,category:data.category,catColor:CAT_COLORS[data.category]??"#6C63FF",done:false,priority:data.priority}]}));
+    setTasks(prev=>({...prev,[dateKey]:[...(prev[dateKey]??[]),{id:Date.now(),title:data.title,category:data.category,catColor:CAT_COLORS[data.category]??"var(--accent)",done:false,priority:data.priority}]}));
   };
 
   const toggleTask = (dateKey,id) => {
@@ -139,7 +139,7 @@ export default function CalendarPage({ onMenuOpen, user }) {
           {["month","week"].map(v=>(
             <button key={v} onClick={()=>setView(v)}
               className="px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
-              style={{ backgroundColor:view===v?"#6C63FF":"transparent", color:view===v?"#fff":"#9CA3AF" }}>
+              style={{ backgroundColor:view===v?"var(--accent)":"transparent", color:view===v?"#fff":"#9CA3AF" }}>
               {v}
             </button>
           ))}
@@ -175,9 +175,9 @@ export default function CalendarPage({ onMenuOpen, user }) {
               return (
                 <button key={key} onClick={()=>setSelected(key)}
                   className="relative aspect-square flex flex-col items-center justify-start pt-1.5 rounded-xl transition-all duration-150 hover:bg-[#1a1a1a]"
-                  style={{ backgroundColor:isSel?"#6C63FF22":"transparent", border:isSel?"1px solid #6C63FF":"1px solid transparent" }}>
+                  style={{ backgroundColor:isSel?"var(--accent)22":"transparent", border:isSel?"1px solid var(--accent)":"1px solid transparent" }}>
                   <span className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${isToday?"text-white":isSel?"text-white":"text-gray-400"}`}
-                    style={{ backgroundColor:isToday?"#6C63FF":"transparent" }}>{day}</span>
+                    style={{ backgroundColor:isToday?"var(--accent)":"transparent" }}>{day}</span>
                   {dayTasks.length>0&&(
                     <div className="flex gap-0.5 mt-0.5 flex-wrap justify-center px-0.5">
                       {dayTasks.slice(0,3).map((t,i)=>(
@@ -204,7 +204,7 @@ export default function CalendarPage({ onMenuOpen, user }) {
                     style={{ backgroundColor:"#161616", border:"1px solid #2a2a2a", opacity:task.done?0.5:1 }}>
                     <button onClick={()=>toggleTask(selected,task.id)}
                       className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
-                      style={{ borderColor:task.done?"#6C63FF":"#444", backgroundColor:task.done?"#6C63FF":"transparent" }}>
+                      style={{ borderColor:task.done?"var(--accent)":"#444", backgroundColor:task.done?"var(--accent)":"transparent" }}>
                       {task.done&&<svg width="10" height="10" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>}
                     </button>
                     <div className="flex-1 min-w-0">
@@ -217,7 +217,7 @@ export default function CalendarPage({ onMenuOpen, user }) {
               </div>
               <button onClick={()=>setShowAdd(true)}
                 className="w-full rounded-2xl py-2.5 text-sm font-bold text-white hover:opacity-90 transition-all flex items-center justify-center gap-2 mb-6"
-                style={{ backgroundColor:"#6C63FF" }}>
+                style={{ backgroundColor:"var(--accent)" }}>
                 <PlusIcon/> + Add task for this day
               </button>
               <div>

@@ -46,7 +46,7 @@ const ALL_ICONS = {
 };
 
 const COLORS = [
-  "#6C63FF","#10B981","#F59E0B","#EF4444","#06B6D4",
+  "var(--accent)","#10B981","#F59E0B","#EF4444","#06B6D4",
   "#F97316","#A78BFA","#EC4899","#14B8A6","#F472B6","#22C55E",
 ];
 
@@ -68,7 +68,7 @@ function statusStyle(s) {
 function CategoryModal({ cat, onClose, onSave, saving }) {
   const [name,    setName]    = useState(cat?.name  ?? "");
   const [iconKey, setIconKey] = useState(cat?.icon  ?? "BookOpen");
-  const [color,   setColor]   = useState(cat?.color ?? "#6C63FF");
+  const [color,   setColor]   = useState(cat?.color ?? "var(--accent)");
 
   const PreviewIcon = ALL_ICONS[iconKey] || BookOpen;
 
@@ -103,7 +103,7 @@ function CategoryModal({ cat, onClose, onSave, saving }) {
             placeholder="e.g. school project"
             className="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none"
             style={{ backgroundColor: "#111", border: "1px solid #333" }}
-            onFocus={e  => e.target.style.borderColor = "#6C63FF"}
+            onFocus={e  => e.target.style.borderColor = "var(--accent)"}
             onBlur={e   => e.target.style.borderColor = "#333"}
           />
         </div>
@@ -147,7 +147,7 @@ function CategoryModal({ cat, onClose, onSave, saving }) {
             disabled={saving || !name.trim()}
             onClick={() => { if (name.trim()) onSave({ name, icon: iconKey, color }); }}
             className="flex-1 rounded-2xl py-3 text-sm font-bold text-white hover:opacity-90 transition-all disabled:opacity-50"
-            style={{ backgroundColor: "#6C63FF" }}>
+            style={{ backgroundColor: "var(--accent)" }}>
             {saving ? "Saving..." : cat ? "Save Changes" : "Create Category"}
           </button>
           <button onClick={onClose}
@@ -315,7 +315,7 @@ export default function CategoriesPage({ onMenuOpen }) {
         </div>
         <button onClick={() => setShowAdd(true)}
           className="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 transition-all"
-          style={{ backgroundColor: "#6C63FF" }}>
+          style={{ backgroundColor: "var(--accent)" }}>
           <PlusIcon/>
           <span className="hidden sm:inline">New Category</span>
           {/* <span className="sm:hidden">+</span> */}
@@ -336,7 +336,7 @@ export default function CategoriesPage({ onMenuOpen }) {
         {/* Loading */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-[#6C63FF] border-t-transparent rounded-full animate-spin"/>
+            <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"/>
           </div>
         ) : (
           <>
@@ -358,10 +358,10 @@ export default function CategoriesPage({ onMenuOpen }) {
 
               {/* Add new card */}
               <button onClick={() => setShowAdd(true)}
-                className="rounded-2xl p-5 flex flex-col items-center justify-center gap-3 transition-all duration-200 hover:border-[#6C63FF]/40 min-h-[160px]"
+                className="rounded-2xl p-5 flex flex-col items-center justify-center gap-3 transition-all duration-200 hover:border-[var(--accent)]/40 min-h-[160px]"
                 style={{ backgroundColor: "transparent", border: "2px dashed #2a2a2a" }}>
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: "#6C63FF" }}>
+                  style={{ backgroundColor: "var(--accent)" }}>
                   <Plus size={20} color="white"/>
                 </div>
                 <span className="text-gray-500 text-sm font-medium">New category</span>

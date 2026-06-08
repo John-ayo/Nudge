@@ -24,7 +24,7 @@ export default function NotFoundPage() {
         <button onClick={()=>navigate("/dashboard")}>
           <span className="text-xl font-bold" style={{ fontFamily:"'Syne',sans-serif" }}>
             <span className="text-white">Nudge</span>
-            <span style={{ color:"#6C63FF" }}>.</span>
+            <span style={{ color:"var(--accent)" }}>.</span>
           </span>
         </button>
       </div>
@@ -35,13 +35,13 @@ export default function NotFoundPage() {
         {/* Icon */}
         <div className="flex justify-center mb-6">
           <div className="w-20 h-20 rounded-2xl flex items-center justify-center"
-            style={{ backgroundColor:"#6C63FF22", border:"1px solid #6C63FF44" }}>
-            <Search size={36} color="#6C63FF"/>
+            style={{ backgroundColor:"var(--accent)22", border:"1px solid var(--accent)44" }}>
+            <Search size={36} color="var(--accent)"/>
           </div>
         </div>
 
         {/* 404 */}
-        <p className="text-8xl font-bold mb-2" style={{ color:"#6C63FF", fontFamily:"'Syne',sans-serif", opacity:0.2 }}>404</p>
+        <p className="text-8xl font-bold mb-2" style={{ color:"var(--accent)", fontFamily:"'Syne',sans-serif", opacity:0.2 }}>404</p>
 
         <h1 className="text-3xl font-bold text-white mb-3 -mt-4" style={{ fontFamily:"'Syne',sans-serif" }}>
           Page not found
@@ -55,7 +55,7 @@ export default function NotFoundPage() {
           <button
             onClick={()=>navigate("/dashboard")}
             className="flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold text-white hover:opacity-90 transition-all"
-            style={{ backgroundColor:"#6C63FF" }}>
+            style={{ backgroundColor:"var(--accent)" }}>
             <Home size={16}/> Go to Dashboard
           </button>
           <button

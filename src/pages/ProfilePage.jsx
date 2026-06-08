@@ -99,7 +99,7 @@ export default function ProfilePage({ onMenuOpen }) {
     : "0";
 
   const STATS = [
-    { value: `${totalXP.toLocaleString()}`, label: "Total XP",       color: "#6C63FF", Icon: Zap       },
+    { value: `${totalXP.toLocaleString()}`, label: "Total XP",       color: "var(--accent)", Icon: Zap       },
     { value: `${streak.best} days`,         label: "Best Streak",    color: "#F59E0B", Icon: Flame      },
     { value: `${avgPerDay} tasks`,          label: "Avg / Day",      color: "#22C55E", Icon: BarChart2  },
     { value: `${focusSessions}`,            label: "Focus Sessions", color: "#06B6D4", Icon: Timer      },
@@ -134,7 +134,7 @@ export default function ProfilePage({ onMenuOpen }) {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-[#6C63FF] border-t-transparent rounded-full animate-spin"/>
+            <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"/>
           </div>
         ) : (
           <>
@@ -143,7 +143,7 @@ export default function ProfilePage({ onMenuOpen }) {
               style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
                 <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white flex-shrink-0"
-                  style={{ backgroundColor: "#6C63FF" }}>
+                  style={{ backgroundColor: "var(--accent)" }}>
                   {name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -151,7 +151,7 @@ export default function ProfilePage({ onMenuOpen }) {
                     <h2 className="text-2xl font-bold text-white"
                       style={{ fontFamily: "'Syne',sans-serif" }}>{name}</h2>
                     <span className="rounded-full px-3 py-0.5 text-xs font-bold text-white"
-                      style={{ backgroundColor: "#6C63FF" }}>Level {level}</span>
+                      style={{ backgroundColor: "var(--accent)" }}>Level {level}</span>
                     <span className="rounded-full px-3 py-0.5 text-xs font-bold flex items-center gap-1"
                       style={{ backgroundColor: "#052e16", color: "#4ade80" }}>
                       <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"/>Active
@@ -164,7 +164,7 @@ export default function ProfilePage({ onMenuOpen }) {
                   </div>
                   <div className="h-1.5 rounded-full w-full max-w-xs" style={{ backgroundColor: "#2a2a2a" }}>
                     <div className="h-1.5 rounded-full transition-all duration-500"
-                      style={{ width: `${levelProg.pct}%`, backgroundColor: "#6C63FF" }}/>
+                      style={{ width: `${levelProg.pct}%`, backgroundColor: "var(--accent)" }}/>
                   </div>
                 </div>
                 <div className="flex gap-6 flex-shrink-0">
@@ -208,7 +208,7 @@ export default function ProfilePage({ onMenuOpen }) {
                     <div className="w-full rounded-t-sm transition-all hover:opacity-80"
                       style={{
                         height: `${Math.max((d.tasks / maxTasks) * 100, 4)}%`,
-                        backgroundColor: d.tasks > 6 ? "#6C63FF" : d.tasks > 3 ? "#6C63FF88" : "#2a2a2a",
+                        backgroundColor: d.tasks > 6 ? "var(--accent)" : d.tasks > 3 ? "var(--accent)88" : "#2a2a2a",
                         minHeight: "4px",
                       }}
                       title={`${d.date.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}: ${d.tasks} tasks`}/>
@@ -241,7 +241,7 @@ export default function ProfilePage({ onMenuOpen }) {
               </div>
               <p className="text-gray-500 text-xs mb-5">Badges coming in Step 7</p>
               <div className="flex flex-col items-center justify-center py-10">
-                <p className="text-2xl font-bold" style={{ color: "#6C63FF", fontFamily: "'Syne',sans-serif" }}>
+                <p className="text-2xl font-bold" style={{ color: "var(--accent)", fontFamily: "'Syne',sans-serif" }}>
                   Coming soon
                 </p>
                 <p className="text-gray-600 text-sm mt-1">Badges are being built. Check back soon.</p>

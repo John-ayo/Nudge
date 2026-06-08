@@ -66,7 +66,7 @@ export default function SignupPage() {
         <div
           className="absolute bottom-0 left-0 w-96 h-96 pointer-events-none opacity-15"
           style={{
-            background: "radial-gradient(circle,#6C63FF 0%,transparent 70%)",
+            background: "radial-gradient(circle,var(--accent) 0%,transparent 70%)",
             transform: "translate(-35%,35%)",
           }}
         />
@@ -74,7 +74,7 @@ export default function SignupPage() {
         <div className="relative z-10">
           <span className="text-2xl font-bold" style={{ fontFamily: "'Syne',sans-serif" }}>
             <span className="text-white">Nudge</span>
-            <span style={{ color: "#6C63FF" }}>.</span>
+            <span style={{ color: "var(--accent)" }}>.</span>
           </span>
         </div>
 
@@ -122,7 +122,7 @@ export default function SignupPage() {
               </p>
               <Link
                 to="/login"
-                className="text-sm text-[#6C63FF] hover:text-[#8B85FF] transition-colors"
+                className="text-sm text-[var(--accent)] hover:text-[#8B85FF] transition-colors"
               >
                 Back to login
               </Link>
@@ -137,7 +137,7 @@ export default function SignupPage() {
               </h1>
               <p className="text-[#666] text-sm mb-8">
                 Already have an account?{" "}
-                <Link to="/login" className="text-[#6C63FF] hover:text-[#8B85FF] transition-colors">
+                <Link to="/login" className="text-[var(--accent)] hover:text-[#8B85FF] transition-colors">
                   Log in
                 </Link>
               </p>
@@ -154,7 +154,7 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={handleGoogle}
-                className="w-full rounded-2xl py-3 px-4 flex items-center justify-center gap-3 text-sm font-medium text-white border border-[#2a2a2a] hover:border-[#6C63FF]/40 transition-all duration-200 mb-6"
+                className="w-full rounded-2xl py-3 px-4 flex items-center justify-center gap-3 text-sm font-medium text-white border border-[#2a2a2a] hover:border-[var(--accent)]/40 transition-all duration-200 mb-6"
                 style={{ backgroundColor: "#161616" }}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
@@ -183,7 +183,7 @@ export default function SignupPage() {
                     required
                     className={inputBase}
                     style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}
-                    onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)"; }}
+                    onFocus={(e) => { e.target.style.borderColor = "var(--accent)"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)"; }}
                     onBlur={(e) => { e.target.style.borderColor = "#2a2a2a"; e.target.style.boxShadow = "none"; }}
                   />
                 </div>
@@ -198,7 +198,7 @@ export default function SignupPage() {
                     required
                     className={inputBase}
                     style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}
-                    onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)"; }}
+                    onFocus={(e) => { e.target.style.borderColor = "var(--accent)"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)"; }}
                     onBlur={(e) => { e.target.style.borderColor = "#2a2a2a"; e.target.style.boxShadow = "none"; }}
                   />
                 </div>
@@ -213,7 +213,7 @@ export default function SignupPage() {
                     required
                     className={inputBase}
                     style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}
-                    onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)"; }}
+                    onFocus={(e) => { e.target.style.borderColor = "var(--accent)"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)"; }}
                     onBlur={(e) => { e.target.style.borderColor = "#2a2a2a"; e.target.style.boxShadow = "none"; }}
                   />
                 </div>
@@ -231,7 +231,7 @@ export default function SignupPage() {
                       backgroundColor: "#161616",
                       border: `1px solid ${confirmPassword && confirmPassword !== password ? "#EF4444" : "#2a2a2a"}`,
                     }}
-                    onFocus={(e) => { e.target.style.borderColor = "#6C63FF"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)"; }}
+                    onFocus={(e) => { e.target.style.borderColor = "var(--accent)"; e.target.style.boxShadow = "0 0 0 3px rgba(108,99,255,0.12)"; }}
                     onBlur={(e) => { e.target.style.borderColor = confirmPassword && confirmPassword !== password ? "#EF4444" : "#2a2a2a"; e.target.style.boxShadow = "none"; }}
                   />
                   {confirmPassword && confirmPassword !== password && (
@@ -243,7 +243,7 @@ export default function SignupPage() {
                   type="submit"
                   disabled={loading || Boolean(confirmPassword && confirmPassword !== password)}
                   className="w-full rounded-2xl py-3 text-sm font-bold text-white transition-all duration-200 mt-2 hover:opacity-90 disabled:opacity-50"
-                  style={{ backgroundColor: "#6C63FF" }}
+                  style={{ backgroundColor: "var(--accent)" }}
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">

@@ -24,7 +24,7 @@ export default function ServerErrorPage() {
         <button onClick={()=>navigate("/dashboard")}>
           <span className="text-xl font-bold" style={{ fontFamily:"'Syne',sans-serif" }}>
             <span className="text-white">Nudge</span>
-            <span style={{ color:"#6C63FF" }}>.</span>
+            <span style={{ color:"var(--accent)" }}>.</span>
           </span>
         </button>
       </div>
@@ -61,7 +61,7 @@ export default function ServerErrorPage() {
           <button
             onClick={()=>window.location.reload()}
             className="flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold text-white hover:opacity-90 transition-all"
-            style={{ backgroundColor:"#6C63FF" }}>
+            style={{ backgroundColor:"var(--accent)" }}>
             <RefreshCw size={16}/> Try again
           </button>
           <button

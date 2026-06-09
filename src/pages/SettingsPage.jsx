@@ -282,7 +282,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
   function handleReset() {
     setNotifs({ dailyReminder: true, streakAlert: true, dueDateWarning: true, weeklyPride: false, celebrationSfx: true });
     setReminderTime("08:00");
-    setAccent("#6C63FF");
+    setAccent("var(--accent)");
     setDailyGoal(5);
     setFocusMins(25);
     setNewPass("");

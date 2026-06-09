@@ -172,7 +172,6 @@ function StreakLossModal({ onClose }) {
   );
 }
 
-// ─── TaskRow - now accepts onFocus ────────────────────────────────────────────
 function TaskRow({ task, onToggle, onFocus }) {
   return (
     <div className="flex items-center gap-3 rounded-2xl px-4 py-3 transition-all"
@@ -349,7 +348,8 @@ export default function DashboardPage({ onMenuOpen }) {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"/>
+            <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+              style={{ borderColor: "var(--accent)", borderTopColor: "transparent" }}/>
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-5">
@@ -382,11 +382,55 @@ export default function DashboardPage({ onMenuOpen }) {
                   </div>
                 </div>
               )}
+
+              {/* ─── Empty State ─────────────────────────────────────────────── */}
               {tasks.length === 0 && (
-                <div className="text-center py-16">
-                  <div className="text-5xl mb-4">📋</div>
-                  <p className="text-white font-semibold mb-1">No tasks yet</p>
-                  <p className="text-gray-500 text-sm">Add your first task to get started.</p>
+                <div className="flex flex-col items-center justify-center py-16 px-4">
+
+                  <svg width="180" height="160" viewBox="0 0 180 160" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-8">
+                    {/* Desk surface */}
+                    <rect x="20" y="120" width="140" height="6" rx="3" fill="#1f1f1f"/>
+                    {/* Notebook */}
+                    <rect x="45" y="72" width="60" height="50" rx="6" fill="#161616" stroke="#2a2a2a" strokeWidth="1.5"/>
+                    {/* Notebook spine */}
+                    <rect x="45" y="72" width="8" height="50" rx="3" fill="#2a2a2a"/>
+                    {/* Notebook lines */}
+                    <line x1="62" y1="90" x2="95" y2="90" stroke="#2a2a2a" strokeWidth="1.5" strokeLinecap="round"/>
+                    <line x1="62" y1="100" x2="95" y2="100" stroke="#2a2a2a" strokeWidth="1.5" strokeLinecap="round"/>
+                    <line x1="62" y1="110" x2="82" y2="110" stroke="#2a2a2a" strokeWidth="1.5" strokeLinecap="round"/>
+                    {/* Big plus circle */}
+                    <circle cx="120" cy="85" r="28" fill="#1a1a2e" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="4 2"/>
+                    {/* Plus icon */}
+                    <line x1="120" y1="74" x2="120" y2="96" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round"/>
+                    <line x1="109" y1="85" x2="131" y2="85" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round"/>
+                    {/* Pencil */}
+                    <g transform="rotate(-35 75 68)">
+                      <rect x="68" y="44" width="8" height="28" rx="2" fill="#2a2a2a"/>
+                      <polygon points="68,72 76,72 72,82" fill="#F59E0B"/>
+                      <rect x="68" y="44" width="8" height="6" rx="2" fill="#444"/>
+                    </g>
+                    {/* Floating dots */}
+                    <circle cx="30" cy="65" r="3" fill="var(--accent)" opacity="0.4"/>
+                    <circle cx="155" cy="60" r="2" fill="var(--accent)" opacity="0.3"/>
+                    <circle cx="148" cy="115" r="2.5" fill="#F59E0B" opacity="0.3"/>
+                    <circle cx="35" cy="108" r="2" fill="#22C55E" opacity="0.3"/>
+                    {/* Sparkles */}
+                    <path d="M160 75 L162 70 L164 75 L162 80 Z" fill="var(--accent)" opacity="0.5"/>
+                    <path d="M22 80 L24 76 L26 80 L24 84 Z" fill="#F59E0B" opacity="0.4"/>
+                  </svg>
+
+                  <h3 className="text-white text-xl font-bold mb-2" style={{ fontFamily: "'Syne', sans-serif" }}>
+                    Nothing here yet
+                  </h3>
+                  <p className="text-gray-500 text-sm mb-8 text-center max-w-xs leading-relaxed">
+                    Your first task is the hardest one to add. Everything after that gets easier.
+                  </p>
+                  <button
+                    onClick={() => setShowAdd(true)}
+                    className="flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold text-white hover:opacity-90 transition-all"
+                    style={{ backgroundColor: "var(--accent)" }}>
+                    <Plus size={16}/> Add your first task
+                  </button>
                 </div>
               )}
             </div>

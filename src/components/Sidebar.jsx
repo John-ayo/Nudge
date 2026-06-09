@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
   LayoutDashboard, CheckSquare, Tag,
-  Calendar, Settings, User, X, Flame, Zap,
+  Calendar, Settings, User, X, Flame, Zap, LogOut,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useAccent } from "../context/AccentContext";
@@ -29,10 +29,10 @@ function getLevelXP(totalXP) {
 }
 
 export default function Sidebar({ open, onClose }) {
-  const { user }    = useAuth();
-  const { accent }  = useAccent();
-  const navigate    = useNavigate();
-  const location    = useLocation();
+  const { user }   = useAuth();
+  const { accent } = useAccent();
+  const navigate   = useNavigate();
+  const location   = useLocation();
 
   const [totalXP, setTotalXP] = useState(0);
   const [todayXP, setTodayXP] = useState(0);
@@ -107,11 +107,15 @@ export default function Sidebar({ open, onClose }) {
     return () => supabase.removeChannel(channel);
   }, [user]);
 
-  const level                           = getLevel(totalXP);
+  const level                               = getLevel(totalXP);
   const { current: levelXP, max: levelMax } = getLevelXP(totalXP);
-  const xpPct                           = Math.min((levelXP / levelMax) * 100, 100);
-  const name                            = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
-  const handleNav                       = path => { navigate(path); onClose?.(); };
+  const xpPct                               = Math.min((levelXP / levelMax) * 100, 100);
+  const name                                = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const handleNav                           = path => { navigate(path); onClose?.(); };
+  const handleLogout                        = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
 
   return (
     <>
@@ -191,6 +195,17 @@ export default function Sidebar({ open, onClose }) {
               <div className="text-gray-500 text-xs">XP today</div>
             </div>
           </div>
+
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:text-white transition-all mt-3"
+            style={{ backgroundColor: "transparent" }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = "#1f1f1f"}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}>
+            <LogOut size={15}/>
+            <span>Log out</span>
+          </button>
         </div>
       </div>
     </>

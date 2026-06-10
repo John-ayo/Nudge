@@ -1,25 +1,24 @@
-import { Component } from "react";
+import React from "react";
 import { StandaloneErrorDisplay } from "./StandaloneErrorDisplay";
 
-class ErrorBoundary extends Component {
+class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
+  static getDerivedStateFromError() {
+    return { hasError: true };
   }
 
-  componentDidCatch(error, errorInfo) {
-    console.error("Error caught by boundary:", error, errorInfo);
+  componentDidCatch(error, info) {
+    console.error("[Nudge] Uncaught render error:", error, info.componentStack);
   }
 
   render() {
     if (this.state.hasError) {
       return <StandaloneErrorDisplay />;
     }
-
     return this.props.children;
   }
 }

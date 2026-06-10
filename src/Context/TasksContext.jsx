@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { fetchTasks, createTask, updateTask, deleteTask } from "../lib/tasks";
 import { fetchCategories } from "../lib/categories";
@@ -15,7 +16,8 @@ import {
 const TasksContext = createContext(null);
 
 export function TasksProvider({ children }) {
-  const { user } = useAuth();
+  const { user }   = useAuth();
+  const navigate   = useNavigate();
 
   const [tasks,      setTasks]      = useState([]);
   const [categories, setCategories] = useState([]);
@@ -23,7 +25,7 @@ export function TasksProvider({ children }) {
   const [streak,     setStreak]     = useState({ current: 0, best: 0 });
   const [loading,    setLoading]    = useState(true);
 
-  // ─── Initial load + identify user ──────────────────────────────────────────
+  // ─── Initial load + identify user ─────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
 
@@ -53,6 +55,7 @@ export function TasksProvider({ children }) {
         }
       } catch (err) {
         console.error("TasksContext load error:", err);
+        navigate("/500", { state: { error: err.message } });
       } finally {
         setLoading(false);
       }
@@ -80,6 +83,8 @@ export function TasksProvider({ children }) {
   }, [user]);
 
   // ─── toggleTask ────────────────────────────────────────────────────────────
+  // Intentionally no /500 redirect here. Optimistic rollback handles failure
+  // gracefully without navigating the user away from what they were doing.
   const toggleTask = useCallback(async (taskOrId, onCelebration) => {
     const task    = typeof taskOrId === "object" ? taskOrId : tasks.find(t => t.id === taskOrId);
     const newDone = !task.done;
@@ -101,13 +106,11 @@ export function TasksProvider({ children }) {
           setStreak(prev => ({ ...prev, current: new_streak, best: Math.max(new_streak, prev.best) }));
           onCelebration?.({ title: task.title, xp: xp_awarded, newStreak: new_streak });
 
-          // Sounds
           playTaskComplete();
           if ([7, 14, 21, 30, 60, 100].includes(new_streak)) {
             playStreakMilestone();
           }
 
-          // Analytics
           trackTaskCompleted({
             task_id:    task.id,
             priority:   task.priority,
@@ -124,63 +127,78 @@ export function TasksProvider({ children }) {
 
   // ─── addTask ───────────────────────────────────────────────────────────────
   const addTask = useCallback(async (data) => {
-    const newTask = await createTask(user.id, {
-      title:       data.title,
-      priority:    data.priority,
-      est:         data.est,
-      due_date:    data.due_date ?? data.due ?? null,
-      category_id: data.category_id ?? null,
-    });
+    try {
+      const newTask = await createTask(user.id, {
+        title:       data.title,
+        priority:    data.priority,
+        est:         data.est,
+        due_date:    data.due_date ?? data.due ?? null,
+        category_id: data.category_id ?? null,
+      });
 
-    setTasks(prev => [newTask, ...prev]);
+      setTasks(prev => [newTask, ...prev]);
 
-    trackTaskCreated({
-      priority:     data.priority,
-      has_category: !!data.category_id,
-      has_due_date: !!(data.due_date ?? data.due),
-      est:          data.est ?? null,
-    });
+      trackTaskCreated({
+        priority:     data.priority,
+        has_category: !!data.category_id,
+        has_due_date: !!(data.due_date ?? data.due),
+        est:          data.est ?? null,
+      });
 
-    return newTask;
+      return newTask;
+    } catch (err) {
+      console.error("addTask error:", err);
+      navigate("/500", { state: { error: err.message } });
+    }
   }, [user]);
 
   // ─── editTask ──────────────────────────────────────────────────────────────
   const editTask = useCallback(async (taskId, data) => {
-    const original = tasks.find(t => t.id === taskId);
+    try {
+      const original = tasks.find(t => t.id === taskId);
 
-    const updated = await updateTask(taskId, {
-      title:       data.title,
-      priority:    data.priority,
-      due_date:    data.due_date ?? data.due ?? null,
-      est:         data.est,
-      category_id: data.category_id ?? null,
-    });
-
-    setTasks(prev => prev.map(t => t.id === taskId ? updated : t));
-
-    if (original) {
-      const changed_fields = Object.keys(data).filter(k => {
-        const key = k === "due" ? "due_date" : k;
-        return original[key] !== data[k];
+      const updated = await updateTask(taskId, {
+        title:       data.title,
+        priority:    data.priority,
+        due_date:    data.due_date ?? data.due ?? null,
+        est:         data.est,
+        category_id: data.category_id ?? null,
       });
-      if (changed_fields.length > 0) {
-        trackTaskEdited({ task_id: taskId, changed_fields });
-      }
-    }
 
-    return updated;
+      setTasks(prev => prev.map(t => t.id === taskId ? updated : t));
+
+      if (original) {
+        const changed_fields = Object.keys(data).filter(k => {
+          const key = k === "due" ? "due_date" : k;
+          return original[key] !== data[k];
+        });
+        if (changed_fields.length > 0) {
+          trackTaskEdited({ task_id: taskId, changed_fields });
+        }
+      }
+
+      return updated;
+    } catch (err) {
+      console.error("editTask error:", err);
+      navigate("/500", { state: { error: err.message } });
+    }
   }, [tasks]);
 
   // ─── removeTask ────────────────────────────────────────────────────────────
   const removeTask = useCallback(async (taskId) => {
-    const task = tasks.find(t => t.id === taskId);
-    await deleteTask(taskId);
-    setTasks(prev => prev.filter(t => t.id !== taskId));
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      await deleteTask(taskId);
+      setTasks(prev => prev.filter(t => t.id !== taskId));
 
-    trackTaskDeleted({
-      task_id:  taskId,
-      priority: task?.priority ?? null,
-    });
+      trackTaskDeleted({
+        task_id:  taskId,
+        priority: task?.priority ?? null,
+      });
+    } catch (err) {
+      console.error("removeTask error:", err);
+      navigate("/500", { state: { error: err.message } });
+    }
   }, [tasks]);
 
   return (

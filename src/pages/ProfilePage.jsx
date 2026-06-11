@@ -1,37 +1,41 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Menu, Zap, Flame, BarChart2, Timer } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { getTotalXP, getXPLog } from "../lib/xp";
 import { getStreak } from "../lib/streaks";
 import { fetchTasks } from "../lib/tasks";
 import { supabase } from "../lib/supabase";
+import { BADGE_LIST } from "../lib/badges";
+import BadgeIcon from "../components/BadgeIcon";
+import { useTasks } from "../context/TasksContext";
 
-function getLevel(totalXP) {
-  return Math.floor(totalXP / 500) + 1;
-}
-
+function getLevel(totalXP)        { return Math.floor(totalXP / 500) + 1; }
 function getLevelProgress(totalXP) {
   const xpIntoLevel = totalXP % 500;
   return { current: xpIntoLevel, max: 500, pct: Math.min((xpIntoLevel / 500) * 100, 100) };
 }
 
 export default function ProfilePage({ onMenuOpen }) {
-  const { user } = useAuth();
-
-  const [totalXP,      setTotalXP]      = useState(0);
-  const [streak,       setStreak]       = useState({ current: 0, best: 0 });
-  const [tasks,        setTasks]        = useState([]);
-  const [xpLog,        setXpLog]        = useState([]);
-  const [prideData,    setPrideData]    = useState([]);
-  const [loading,      setLoading]      = useState(true);
-  const [badgeFilter,  setBadgeFilter]  = useState("All");
+  const { user }   = useAuth();
+  const navigate   = useNavigate();
+  const { badges } = useTasks();
+  
+  const [totalXP,     setTotalXP]     = useState(0);
+  const [streak,      setStreak]      = useState({ current: 0, best: 0 });
+  const [tasks,       setTasks]       = useState([]);
+  const [xpLog,       setXpLog]       = useState([]);
+  const [prideData,   setPrideData]   = useState([]);
+  
+  const [loading,     setLoading]     = useState(true);
+  const [badgeFilter, setBadgeFilter] = useState("All");
 
   useEffect(() => {
     if (!user) return;
 
     async function load() {
       try {
-        const [xpTotal, streakData, tasksData, xpLogData] = await Promise.all([
+        const [xpTotal, streakData, tasksData, xpLogData, badgeData] = await Promise.all([
           getTotalXP(user.id),
           getStreak(user.id),
           fetchTasks(user.id),
@@ -43,7 +47,7 @@ export default function ProfilePage({ onMenuOpen }) {
         setTasks(tasksData);
         setXpLog(xpLogData);
 
-        // Build pride chart - last 30 days task completions
+
         const last30 = Array.from({ length: 30 }, (_, i) => {
           const d = new Date();
           d.setDate(d.getDate() - (29 - i));
@@ -58,6 +62,7 @@ export default function ProfilePage({ onMenuOpen }) {
 
       } catch (err) {
         console.error("ProfilePage load error:", err);
+        navigate("/500", { state: { error: err.message } });
       } finally {
         setLoading(false);
       }
@@ -66,7 +71,7 @@ export default function ProfilePage({ onMenuOpen }) {
     load();
   }, [user]);
 
-  // Realtime XP update
+  // Realtime XP
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -80,8 +85,8 @@ export default function ProfilePage({ onMenuOpen }) {
     return () => supabase.removeChannel(channel);
   }, [user]);
 
-  const name         = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
-  const memberSince  = user?.created_at
+  const name        = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
+  const memberSince = user?.created_at
     ? new Date(user.created_at).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
     : "Recently";
 
@@ -89,29 +94,28 @@ export default function ProfilePage({ onMenuOpen }) {
   const levelProg    = getLevelProgress(totalXP);
   const doneTasks    = tasks.filter(t => t.done).length;
   const maxTasks     = Math.max(...prideData.map(d => d.tasks), 1);
-
-  // Focus sessions: count xp_log entries with "focus" in reason (placeholder for now)
   const focusSessions = xpLog.filter(x => x.reason?.toLowerCase().includes("focus")).length;
-
-  // Avg tasks per day over last 30 days
-  const avgPerDay = prideData.length > 0
+  const avgPerDay    = prideData.length > 0
     ? (prideData.reduce((s, d) => s + d.tasks, 0) / 30).toFixed(1)
     : "0";
+  const earnedKeys = new Set((badges || []).map(b => b.badge_id));
+  const earnedCount = (badges || []).length || 0;
+
+  const filteredBadges = BADGE_LIST.filter(badge => {
+    if (badgeFilter === "Unlocked") return earnedKeys.has(badge.key);
+    if (badgeFilter === "Locked")   return !earnedKeys.has(badge.key);
+    return true;
+  });
 
   const STATS = [
-    { value: `${totalXP.toLocaleString()}`, label: "Total XP",       color: "var(--accent)", Icon: Zap       },
-    { value: `${streak.best} days`,         label: "Best Streak",    color: "#F59E0B", Icon: Flame      },
-    { value: `${avgPerDay} tasks`,          label: "Avg / Day",      color: "#22C55E", Icon: BarChart2  },
-    { value: `${focusSessions}`,            label: "Focus Sessions", color: "#06B6D4", Icon: Timer      },
+    { value: `${totalXP.toLocaleString()}`, label: "Total XP",       color: "var(--accent)", Icon: Zap      },
+    { value: `${streak.best} days`,         label: "Best Streak",    color: "#F59E0B",       Icon: Flame    },
+    { value: `${avgPerDay} tasks`,          label: "Avg / Day",      color: "#22C55E",       Icon: BarChart2 },
+    { value: `${focusSessions}`,            label: "Focus Sessions", color: "#06B6D4",       Icon: Timer    },
   ];
 
-  // Pride chart date labels
-  const firstDay = prideData[0]?.date
-    ? prideData[0].date.toLocaleDateString("en-GB", { day: "numeric", month: "short" })
-    : "";
-  const lastDay  = prideData[29]?.date
-    ? prideData[29].date.toLocaleDateString("en-GB", { day: "numeric", month: "short" })
-    : "";
+  const firstDay = prideData[0]?.date?.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) ?? "";
+  const lastDay  = prideData[29]?.date?.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) ?? "";
 
   return (
     <div className="min-h-screen flex flex-col"
@@ -122,7 +126,7 @@ export default function ProfilePage({ onMenuOpen }) {
       <div className="sticky top-0 z-20 flex items-center gap-4 px-5 lg:px-8 py-5"
         style={{ backgroundColor: "#0a0a0a", borderBottom: "1px solid #141414" }}>
         <button onClick={() => onMenuOpen?.()} className="lg:hidden text-gray-400 hover:text-white transition-colors">
-          <Menu size={22}/>
+          <Menu size={22} />
         </button>
         <div>
           <p className="text-gray-500 text-xs tracking-widest font-medium">PROFILE</p>
@@ -134,7 +138,7 @@ export default function ProfilePage({ onMenuOpen }) {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"/>
+            <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <>
@@ -148,13 +152,12 @@ export default function ProfilePage({ onMenuOpen }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h2 className="text-2xl font-bold text-white"
-                      style={{ fontFamily: "'Syne',sans-serif" }}>{name}</h2>
+                    <h2 className="text-2xl font-bold text-white" style={{ fontFamily: "'Syne',sans-serif" }}>{name}</h2>
                     <span className="rounded-full px-3 py-0.5 text-xs font-bold text-white"
                       style={{ backgroundColor: "var(--accent)" }}>Level {level}</span>
                     <span className="rounded-full px-3 py-0.5 text-xs font-bold flex items-center gap-1"
                       style={{ backgroundColor: "#052e16", color: "#4ade80" }}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"/>Active
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />Active
                     </span>
                   </div>
                   <p className="text-gray-400 text-sm mb-3">Member since {memberSince} · Builder &amp; Doer</p>
@@ -164,18 +167,18 @@ export default function ProfilePage({ onMenuOpen }) {
                   </div>
                   <div className="h-1.5 rounded-full w-full max-w-xs" style={{ backgroundColor: "#2a2a2a" }}>
                     <div className="h-1.5 rounded-full transition-all duration-500"
-                      style={{ width: `${levelProg.pct}%`, backgroundColor: "var(--accent)" }}/>
+                      style={{ width: `${levelProg.pct}%`, backgroundColor: "var(--accent)" }} />
                   </div>
                 </div>
                 <div className="flex gap-6 flex-shrink-0">
                   {[
                     { value: doneTasks,      label: "Tasks Done"  },
                     { value: streak.current, label: "Day Streak", Icon: Flame, iconColor: "#F97316" },
-                    { value: 0,              label: "Badges"      },
+                    { value: earnedCount,    label: "Badges"      },
                   ].map(s => (
                     <div key={s.label} className="text-center">
                       <p className="text-2xl font-bold text-white flex items-center justify-center gap-1">
-                        {s.value}{s.Icon && <s.Icon size={18} color={s.iconColor}/>}
+                        {s.value}{s.Icon && <s.Icon size={18} color={s.iconColor} />}
                       </p>
                       <p className="text-gray-500 text-xs">{s.label}</p>
                     </div>
@@ -189,7 +192,7 @@ export default function ProfilePage({ onMenuOpen }) {
               {STATS.map(s => (
                 <div key={s.label} className="rounded-2xl p-5"
                   style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
-                  <div className="mb-3" style={{ color: s.color }}><s.Icon size={20}/></div>
+                  <div className="mb-3" style={{ color: s.color }}><s.Icon size={20} /></div>
                   <p className="text-2xl font-bold mb-0.5" style={{ color: s.color }}>{s.value}</p>
                   <p className="text-gray-400 text-xs">{s.label}</p>
                 </div>
@@ -199,8 +202,7 @@ export default function ProfilePage({ onMenuOpen }) {
             {/* Pride Chart */}
             <div className="rounded-2xl p-6 mb-5"
               style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
-              <h3 className="text-white font-bold text-base mb-0.5"
-                style={{ fontFamily: "'Syne',sans-serif" }}>Pride Chart</h3>
+              <h3 className="text-white font-bold text-base mb-0.5" style={{ fontFamily: "'Syne',sans-serif" }}>Pride Chart</h3>
               <p className="text-gray-500 text-xs mb-5">Tasks completed · Last 30 days</p>
               <div className="flex items-end gap-1 h-24 mb-3">
                 {prideData.map(d => (
@@ -211,7 +213,8 @@ export default function ProfilePage({ onMenuOpen }) {
                         backgroundColor: d.tasks > 6 ? "var(--accent)" : d.tasks > 3 ? "var(--accent)88" : "#2a2a2a",
                         minHeight: "4px",
                       }}
-                      title={`${d.date.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}: ${d.tasks} tasks`}/>
+                      title={`${d.date.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}: ${d.tasks} tasks`}
+                    />
                   </div>
                 ))}
               </div>
@@ -222,31 +225,71 @@ export default function ProfilePage({ onMenuOpen }) {
             </div>
 
             {/* Achievements */}
-            <div className="rounded-2xl p-6"
+            <div className="rounded-2xl p-4 sm:p-6"
               style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-white font-bold text-base"
-                  style={{ fontFamily: "'Syne',sans-serif" }}>Achievements</h3>
-                <div className="flex items-center gap-1 rounded-xl p-1" style={{ backgroundColor: "#111" }}>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4">
+                <div>
+                  <h3 className="text-white font-bold text-base" style={{ fontFamily: "'Syne',sans-serif" }}>Achievements</h3>
+                  <p className="text-gray-500 text-xs mt-0.5">{earnedCount} of {BADGE_LIST.length} unlocked</p>
+                </div>
+                <div className="flex items-center gap-1 rounded-xl p-1 flex-wrap sm:flex-nowrap" style={{ backgroundColor: "#111" }}>
                   {["All", "Unlocked", "Locked"].map(f => (
                     <button key={f} onClick={() => setBadgeFilter(f)}
-                      className="px-3 py-1 rounded-lg text-xs font-semibold transition-all"
+                      className="px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap"
                       style={{
                         backgroundColor: badgeFilter === f ? "#2a2a2a" : "transparent",
                         color: badgeFilter === f ? "#fff" : "#9CA3AF",
                         border: badgeFilter === f ? "1px solid #444" : "1px solid transparent",
-                      }}>{f}</button>
+                      }}>
+                      {f}
+                    </button>
                   ))}
                 </div>
               </div>
-              <p className="text-gray-500 text-xs mb-5">Badges coming in Step 7</p>
-              <div className="flex flex-col items-center justify-center py-10">
-                <p className="text-2xl font-bold" style={{ color: "var(--accent)", fontFamily: "'Syne',sans-serif" }}>
-                  Coming soon
-                </p>
-                <p className="text-gray-600 text-sm mt-1">Badges are being built. Check back soon.</p>
+
+              <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {filteredBadges.map(badge => {
+                  const unlocked  = earnedKeys.has(badge.key);
+                  const earnedRow = (badges || []).find(b => b.badge_id === badge.key);
+                  const earnedDate = earnedRow?.unlocked_at
+                    ? new Date(earnedRow.unlocked_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+                    : null;
+
+                  return (
+                    <div key={badge.key}
+                      className="flex flex-col items-center text-center p-3 sm:p-4 rounded-2xl transition-all"
+                      style={{
+                        backgroundColor: unlocked ? "#0e0c1f" : "#111",
+                        border: unlocked ? "1px solid rgba(108,99,255,0.25)" : "1px solid #1f1f1f",
+                      }}>
+                      <BadgeIcon badgeKey={badge.key} unlocked={unlocked} size={64} />
+                      <p className="text-sm font-bold mt-3 mb-0.5"
+                        style={{ color: unlocked ? "#fff" : "#555", fontFamily: "'Syne',sans-serif" }}>
+                        {badge.name}
+                      </p>
+                      <p className="text-xs" style={{ color: unlocked ? "#888" : "#444" }}>
+                        {unlocked && earnedDate ? earnedDate : badge.description}
+                      </p>
+                      {!unlocked && (
+                        <span className="mt-2 text-xs font-semibold rounded-full px-2.5 py-0.5"
+                          style={{ backgroundColor: "#1a1a1a", color: "#444", border: "1px solid #2a2a2a" }}>
+                          Locked
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {filteredBadges.length === 0 && (
+                  <div className="col-span-full flex flex-col items-center justify-center py-10">
+                    <p className="text-gray-600 text-sm">
+                      {badgeFilter === "Unlocked" ? "No badges unlocked yet. Keep going." : "All badges unlocked!"}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
+
           </>
         )}
       </div>

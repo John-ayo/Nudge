@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
+import { fetchUserBadges } from "../lib/badges";
 import { fetchTasks, createTask, updateTask, deleteTask } from "../lib/tasks";
 import { fetchCategories } from "../lib/categories";
 import { supabase } from "../lib/supabase";
@@ -16,16 +17,18 @@ import {
 const TasksContext = createContext(null);
 
 export function TasksProvider({ children }) {
-  const { user }   = useAuth();
-  const navigate   = useNavigate();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const [tasks,      setTasks]      = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [totalXP,    setTotalXP]    = useState(0);
-  const [streak,     setStreak]     = useState({ current: 0, best: 0 });
-  const [loading,    setLoading]    = useState(true);
+  const [tasks,         setTasks]         = useState([]);
+  const [categories,    setCategories]    = useState([]);
+  const [totalXP,       setTotalXP]       = useState(0);
+  const [streak,        setStreak]        = useState({ current: 0, best: 0 });
+  const [loading,       setLoading]       = useState(true);
+  const [pendingBadges, setPendingBadges] = useState([]);
+  const [badges,        setBadges]        = useState([]);
 
-  // ─── Initial load + identify user ─────────────────────────────────────────
+  // ─── Initial load ──────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
 
@@ -37,15 +40,17 @@ export function TasksProvider({ children }) {
 
     async function load() {
       try {
-        const [tasksData, catsData, xpData, streakData] = await Promise.all([
+        const [tasksData, catsData, xpData, streakData, badgesData] = await Promise.all([
           fetchTasks(user.id),
           fetchCategories(user.id),
           supabase.from("xp_log").select("amount").eq("user_id", user.id),
           supabase.from("streaks").select("*").eq("user_id", user.id).single(),
+          fetchUserBadges(user.id),
         ]);
 
         setTasks(tasksData);
         setCategories(catsData);
+        setBadges(badgesData);
 
         if (xpData.data) {
           setTotalXP(xpData.data.reduce((sum, row) => sum + (row.amount ?? 0), 0));
@@ -64,7 +69,7 @@ export function TasksProvider({ children }) {
     load();
   }, [user]);
 
-  // ─── Realtime XP updates ───────────────────────────────────────────────────
+  // ─── Realtime XP ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
 
@@ -73,18 +78,19 @@ export function TasksProvider({ children }) {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "xp_log", filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          setTotalXP(prev => prev + (payload.new.amount ?? 0));
-        }
+        (payload) => setTotalXP(prev => prev + (payload.new.amount ?? 0))
       )
       .subscribe();
 
     return () => supabase.removeChannel(channel);
   }, [user]);
 
+  // ─── dismissBadge ──────────────────────────────────────────────────────────
+  const dismissBadge = useCallback(() => {
+    setPendingBadges(prev => prev.slice(1));
+  }, []);
+
   // ─── toggleTask ────────────────────────────────────────────────────────────
-  // Intentionally no /500 redirect here. Optimistic rollback handles failure
-  // gracefully without navigating the user away from what they were doing.
   const toggleTask = useCallback(async (taskOrId, onCelebration) => {
     const task    = typeof taskOrId === "object" ? taskOrId : tasks.find(t => t.id === taskOrId);
     const newDone = !task.done;
@@ -102,8 +108,14 @@ export function TasksProvider({ children }) {
         if (res.error) console.error("complete-task error:", res.error);
 
         if (res.data) {
-          const { xp_awarded, new_streak } = res.data;
-          setStreak(prev => ({ ...prev, current: new_streak, best: Math.max(new_streak, prev.best) }));
+          const { xp_awarded, new_streak, new_badges = [] } = res.data;
+
+          setStreak(prev => ({
+            ...prev,
+            current: new_streak,
+            best: Math.max(new_streak, prev.best),
+          }));
+
           onCelebration?.({ title: task.title, xp: xp_awarded, newStreak: new_streak });
 
           playTaskComplete();
@@ -111,13 +123,35 @@ export function TasksProvider({ children }) {
             playStreakMilestone();
           }
 
-          trackTaskCompleted({
-            task_id:    task.id,
-            priority:   task.priority,
-            xp_awarded,
-            new_streak,
-          });
+          trackTaskCompleted({ task_id: task.id, priority: task.priority, xp_awarded, new_streak });
+
+          // Queue badge modals to fire after celebration modal has had time to show
+          if (new_badges.length > 0) {
+
+            setBadges(prev => [
+              ...prev, 
+              ...new_badges.map(b => ({ 
+                badge_id: b, 
+                unlocked_at: new Date().toISOString(), 
+            })),
+          ]);
+
+            setTimeout(() => {
+              setPendingBadges(prev => [...prev, ...new_badges]);
+            }, 4000);
+          }
         }
+
+        return (
+          <TasksContext.Provider value={{
+            tasks, categories, totalXP, streak, loading,
+            toggleTask, addTask, editTask, removeTask, setTasks, setCategories,
+            pendingBadges, dismissBadge,
+          }}>
+            {children}
+          </TasksContext.Provider>
+        )
+
       }
     } catch (err) {
       setTasks(prev => prev.map(t => t.id === task.id ? { ...t, done: task.done } : t));
@@ -172,9 +206,7 @@ export function TasksProvider({ children }) {
           const key = k === "due" ? "due_date" : k;
           return original[key] !== data[k];
         });
-        if (changed_fields.length > 0) {
-          trackTaskEdited({ task_id: taskId, changed_fields });
-        }
+        if (changed_fields.length > 0) trackTaskEdited({ task_id: taskId, changed_fields });
       }
 
       return updated;
@@ -190,11 +222,7 @@ export function TasksProvider({ children }) {
       const task = tasks.find(t => t.id === taskId);
       await deleteTask(taskId);
       setTasks(prev => prev.filter(t => t.id !== taskId));
-
-      trackTaskDeleted({
-        task_id:  taskId,
-        priority: task?.priority ?? null,
-      });
+      trackTaskDeleted({ task_id: taskId, priority: task?.priority ?? null });
     } catch (err) {
       console.error("removeTask error:", err);
       navigate("/500", { state: { error: err.message } });
@@ -206,6 +234,7 @@ export function TasksProvider({ children }) {
       tasks, categories, totalXP, streak, loading,
       toggleTask, addTask, editTask, removeTask,
       setTasks, setCategories,
+      pendingBadges, dismissBadge,
     }}>
       {children}
     </TasksContext.Provider>

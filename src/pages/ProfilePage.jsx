@@ -148,7 +148,13 @@ export default function ProfilePage({ onMenuOpen }) {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
                 <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white flex-shrink-0"
                   style={{ backgroundColor: "var(--accent)" }}>
-                  {name.charAt(0).toUpperCase()}
+                  {user?.user_metadata?.avatar_url ? (
+                    <img src={user.user_metadata.avatar_url} alt={name} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full rounded-full flex items-center justify-center">
+                      {name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -225,17 +231,17 @@ export default function ProfilePage({ onMenuOpen }) {
             </div>
 
             {/* Achievements */}
-            <div className="rounded-2xl p-4 sm:p-6"
+            <div className="rounded-2xl p-6"
               style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4">
+              <div className="flex items-center justify-between mb-1">
                 <div>
                   <h3 className="text-white font-bold text-base" style={{ fontFamily: "'Syne',sans-serif" }}>Achievements</h3>
                   <p className="text-gray-500 text-xs mt-0.5">{earnedCount} of {BADGE_LIST.length} unlocked</p>
                 </div>
-                <div className="flex items-center gap-1 rounded-xl p-1 flex-wrap sm:flex-nowrap" style={{ backgroundColor: "#111" }}>
+                <div className="flex items-center gap-1 rounded-xl p-1" style={{ backgroundColor: "#111" }}>
                   {["All", "Unlocked", "Locked"].map(f => (
                     <button key={f} onClick={() => setBadgeFilter(f)}
-                      className="px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap"
+                      className="px-3 py-1 rounded-lg text-xs font-semibold transition-all"
                       style={{
                         backgroundColor: badgeFilter === f ? "#2a2a2a" : "transparent",
                         color: badgeFilter === f ? "#fff" : "#9CA3AF",

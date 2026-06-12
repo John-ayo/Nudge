@@ -4,21 +4,35 @@ const AccentContext = createContext(null);
 
 export function AccentProvider({ children }) {
   const [accent, setAccent] = useState(() => {
-    return localStorage.getItem("nudge_accent") ?? "var(--accent)";
+    return localStorage.getItem("nudge_accent") ?? "#6C63FF";
   });
 
-  // Set CSS variable on mount and whenever accent changes
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("nudge_theme") ?? "dark";
+  });
+
+  // Apply accent CSS variable
   useEffect(() => {
     document.documentElement.style.setProperty("--accent", accent);
   }, [accent]);
+
+  // Apply theme attribute on <html>
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
 
   const updateAccent = (color) => {
     setAccent(color);
     localStorage.setItem("nudge_accent", color);
   };
 
+  const updateTheme = (newTheme) => {
+    setTheme(newTheme);
+    localStorage.setItem("nudge_theme", newTheme);
+  };
+
   return (
-    <AccentContext.Provider value={{ accent, updateAccent }}>
+    <AccentContext.Provider value={{ accent, updateAccent, theme, updateTheme }}>
       {children}
     </AccentContext.Provider>
   );

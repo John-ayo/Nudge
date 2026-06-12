@@ -1,0 +1,42 @@
+/* ── Nudge Design Tokens ─────────────────────────────────────────── */
+
+:root,
+[data-theme="dark"] {
+  --bg-base:     #0a0a0a;
+  --bg-card:     #161616;
+  --bg-input:    #111111;
+  --bg-hover:    #1f1f1f;
+  --bg-subtle:   #2a2a2a;
+  --bg-sidebar:  #0d0d0d;
+
+  --border-base:   #2a2a2a;
+  --border-subtle: #1f1f1f;
+  --border-strong: #141414;
+
+  --text-primary:  #ffffff;
+  --text-muted:    #9CA3AF;
+  --text-faint:    #6b7280;
+  --text-disabled: #555555;
+
+  --accent: #6C63FF;
+}
+
+[data-theme="light"] {
+  --bg-base:     #f8f8f8;
+  --bg-card:     #ffffff;
+  --bg-input:    #f0f0f0;
+  --bg-hover:    #e8e8e8;
+  --bg-subtle:   #dedede;
+  --bg-sidebar:  #ffffff;
+
+  --border-base:   #e0e0e0;
+  --border-subtle: #ebebeb;
+  --border-strong: #d4d4d4;
+
+  --text-primary:  #0a0a0a;
+  --text-muted:    #6b7280;
+  --text-faint:    #9ca3af;
+  --text-disabled: #aaaaaa;
+
+  --accent: #6C63FF;
+}

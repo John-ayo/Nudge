@@ -105,6 +105,8 @@ export function TasksProvider({ children }) {
           body: { task_id: task.id, user_id: user.id },
         });
 
+        console.log("complete-task response:", JSON.stringify(res));
+
         if (res.error) console.error("complete-task error:", res.error);
 
         if (res.data) {
@@ -125,33 +127,21 @@ export function TasksProvider({ children }) {
 
           trackTaskCompleted({ task_id: task.id, priority: task.priority, xp_awarded, new_streak });
 
-          // Queue badge modals to fire after celebration modal has had time to show
+          // FIX 2: removed erroneous JSX return that was here inside toggleTask
           if (new_badges.length > 0) {
-
             setBadges(prev => [
-              ...prev, 
-              ...new_badges.map(b => ({ 
-                badge_id: b, 
-                unlocked_at: new Date().toISOString(), 
-            })),
-          ]);
+              ...prev,
+              ...new_badges.map(b => ({
+                badge_id: b,
+                unlocked_at: new Date().toISOString(),
+              })),
+            ]);
 
             setTimeout(() => {
               setPendingBadges(prev => [...prev, ...new_badges]);
             }, 4000);
           }
         }
-
-        return (
-          <TasksContext.Provider value={{
-            tasks, categories, totalXP, streak, loading,
-            toggleTask, addTask, editTask, removeTask, setTasks, setCategories,
-            pendingBadges, dismissBadge,
-          }}>
-            {children}
-          </TasksContext.Provider>
-        )
-
       }
     } catch (err) {
       setTasks(prev => prev.map(t => t.id === task.id ? { ...t, done: task.done } : t));
@@ -234,6 +224,7 @@ export function TasksProvider({ children }) {
       tasks, categories, totalXP, streak, loading,
       toggleTask, addTask, editTask, removeTask,
       setTasks, setCategories,
+      badges,          // FIX 3: was missing
       pendingBadges, dismissBadge,
     }}>
       {children}

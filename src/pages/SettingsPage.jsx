@@ -1,5 +1,6 @@
 import { useAccent } from "../context/AccentContext";
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "../lib/supabase";
 import {
   fetchSettings,
   updateSettings,
@@ -123,12 +124,14 @@ function Toast({ message, type }) {
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function SettingsPage({ onMenuOpen, user }) {
   // Loading / saving states
-  const { updateAccent } = useAccent();
+  const { updateAccent, updateTheme } = useAccent();
+  
   const [pageLoading, setPageLoading]   = useState(true);
   const [saving,      setSaving]        = useState(false);
-  const [toast,       setToast]         = useState(null); // { message, type }
-  const [modal,       setModal]         = useState(null); // { type: "clearTasks" | "deleteAccount" }
+  const [toast,       setToast]         = useState(null); 
+  const [modal,       setModal]         = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
+  const [avatarFile, setAvatarFile] = useState(null);
 
   // Account fields
   const [displayName, setDisplayName] = useState("");
@@ -148,6 +151,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
 
   // Appearance
   const [accent, setAccent] = useState("var(--accent)");
+  const [theme, setTheme] = useState("dark");
 
   // Productivity
   const [dailyGoal,  setDailyGoal]  = useState(5);
@@ -167,6 +171,11 @@ export default function SettingsPage({ onMenuOpen, user }) {
         setDisplayName(user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "");
         setEmail(user.email ?? "");
 
+        if (user.user_metadata?.avatar_url) {
+          setAvatarPreview(user.user_metadata.avatar_url);
+        }
+
+
         // Fetch settings row
         const s = await fetchSettings(user.id);
         if (s) {
@@ -179,6 +188,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
           });
           setReminderTime(s.reminder_time ?? "08:00");
           setAccent(s.accent_color ?? "var(--accent)");
+          setTheme(s.theme ?? "dark");
           setDailyGoal(s.daily_goal ?? 5);
           setFocusMins(s.focus_mins ?? 25);
         }
@@ -217,6 +227,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
       showToast("Image must be under 2MB", "error");
       return;
     }
+    setAvatarFile(file);
     const reader = new FileReader();
     reader.onload = ev => setAvatarPreview(ev.target.result);
     reader.readAsDataURL(file);
@@ -236,6 +247,36 @@ export default function SettingsPage({ onMenuOpen, user }) {
 
     setSaving(true);
     try {
+      if (avatarFile) {
+        const ext      = avatarFile.name.split(".").pop();
+        const filePath = `${user.id}/avatar.${ext}`;
+  
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(filePath, avatarFile, { upsert: true });
+  
+        if (uploadError) throw new Error(`Avatar upload failed: ${uploadError.message}`);
+  
+        const { data: urlData } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(filePath);
+  
+        const avatarUrl = urlData.publicUrl;
+  
+        // Save to users table
+        await supabase
+          .from("users")
+          .update({ avatar_url: avatarUrl })
+          .eq("id", user.id);
+  
+        // Save to auth metadata so Sidebar and ProfilePage pick it up
+        await supabase.auth.updateUser({
+          data: { avatar_url: avatarUrl }
+        });
+  
+        setAvatarFile(null);
+      }
+
       // 1. Update settings row
       await updateSettings(user.id, {
         notification_daily_reminder:   notifs.dailyReminder,
@@ -247,6 +288,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
         accent_color:                  accent,
         daily_goal:                    dailyGoal,
         focus_mins:                    focusMins,
+        theme,                        
       });
 
       // 2. Update profile (name / email)
@@ -282,7 +324,9 @@ export default function SettingsPage({ onMenuOpen, user }) {
   function handleReset() {
     setNotifs({ dailyReminder: true, streakAlert: true, dueDateWarning: true, weeklyPride: false, celebrationSfx: true });
     setReminderTime("08:00");
-    setAccent("var(--accent)");
+    setAccent("#6C63FF");
+    setTheme("dark");
+    updateTheme("dark");
     setDailyGoal(5);
     setFocusMins(25);
     setNewPass("");
@@ -447,13 +491,27 @@ export default function SettingsPage({ onMenuOpen, user }) {
 
           {/* Appearance */}
           <Section title="Appearance" sub="Make Nudge feel like yours">
-            <div className="flex items-center justify-between py-3 mb-4" style={{ borderBottom: "1px solid #1f1f1f" }}>
-              <div>
-                <p className="text-white text-sm font-medium">Theme</p>
-                <p className="text-gray-500 text-xs">Dark mode is always on. Light mode coming soon.</p>
-              </div>
-              <span className="rounded-xl px-3 py-1.5 text-xs font-semibold text-white" style={{ backgroundColor: "#2a2a2a" }}>Dark</span>
+          <div className="flex items-center justify-between py-3 mb-4" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+            <div>
+              <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Theme</p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>Switch between dark and light mode</p>
             </div>
+            <div className="flex items-center gap-1 rounded-xl p-1" style={{ backgroundColor: "var(--bg-hover)" }}>
+              {["dark", "light"].map(t => (
+                <button
+                  key={t}
+                  onClick={() => { setTheme(t); updateTheme(t); }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize"
+                  style={{
+                    backgroundColor: theme === t ? "var(--bg-subtle)" : "transparent",
+                    color:  theme === t ? "var(--text-primary)" : "var(--text-muted)",
+                    border: theme === t ? "1px solid var(--border-base)" : "1px solid transparent",
+                  }}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div> 
             <div>
               <p className="text-white text-sm font-medium mb-0.5">Accent Colour</p>
               <p className="text-gray-500 text-xs mb-3">Changes buttons, highlights and active states</p>

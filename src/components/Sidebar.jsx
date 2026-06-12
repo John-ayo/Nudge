@@ -164,7 +164,13 @@ export default function Sidebar({ open, onClose }) {
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
               style={{ backgroundColor: accent }}>
-              {name.charAt(0).toUpperCase()}
+              {user?.user_metadata?.avatar_url ? (
+                <img src={user.user_metadata.avatar_url} alt={name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white">
+                  {name.charAt(0).toUpperCase()}
+                </div>
+              )}
             </div>
             <div>
               <p className="text-white text-sm font-semibold">{name}</p>

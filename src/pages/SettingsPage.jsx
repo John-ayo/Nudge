@@ -11,7 +11,6 @@ import {
   deleteAccount,
 } from "../lib/settings";
 
-// ─── Icons ───────────────────────────────────────────────────────────────────
 const MenuIcon     = () => (<svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>);
 const UploadIcon   = () => (<svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>);
 const DownloadIcon = () => (<svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>);
@@ -28,29 +27,29 @@ const FOCUS_OPTIONS = [
   { label: "60m", value: 60 },
 ];
 
-
-// ─── Sub-components ────
 function Toggle({ on, onChange, accent = "var(--accent)" }) {
   return (
     <button
       onClick={() => onChange(!on)}
       className="relative w-11 h-6 rounded-full transition-all duration-200 flex-shrink-0"
-      style={{ backgroundColor: on ? accent : "#2a2a2a" }}
-    >
+      style={{ backgroundColor: on ? accent : "var(--bg-subtle)" }}>
       <span
         className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200"
-        style={{ left: on ? "calc(100% - 22px)" : "2px" }}
-      />
+        style={{ left: on ? "calc(100% - 22px)" : "2px" }}/>
     </button>
   );
 }
 
 function Section({ title, sub, children }) {
   return (
-    <div className="rounded-2xl p-6 mb-5" style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a" }}>
-      <h3 className="text-white font-bold text-base mb-0.5" style={{ fontFamily: "'Syne',sans-serif" }}>{title}</h3>
-      {sub && <p className="text-gray-500 text-xs mb-5">{sub}</p>}
-      {!sub && <div className="mb-4" />}
+    <div className="rounded-2xl p-6 mb-5"
+      style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-base)" }}>
+      <h3 className="font-bold text-base mb-0.5"
+        style={{ fontFamily: "'Syne',sans-serif", color: "var(--text-primary)" }}>
+        {title}
+      </h3>
+      {sub && <p className="text-xs mb-5" style={{ color: "var(--text-faint)" }}>{sub}</p>}
+      {!sub && <div className="mb-4"/>}
       {children}
     </div>
   );
@@ -58,43 +57,44 @@ function Section({ title, sub, children }) {
 
 function NotifRow({ label, sub, on, onChange, accent }) {
   return (
-    <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid #1f1f1f" }}>
+    <div className="flex items-center justify-between py-3"
+      style={{ borderBottom: "1px solid var(--border-subtle)" }}>
       <div>
-        <p className="text-white text-sm font-medium">{label}</p>
-        <p className="text-gray-500 text-xs">{sub}</p>
+        <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>{label}</p>
+        <p className="text-xs" style={{ color: "var(--text-faint)" }}>{sub}</p>
       </div>
-      <Toggle on={on} onChange={onChange} accent={accent} />
+      <Toggle on={on} onChange={onChange} accent={accent}/>
     </div>
   );
 }
 
-// Confirmation modal for destructive actions
 function ConfirmModal({ title, message, confirmLabel, onConfirm, onCancel, loading }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
       style={{ backgroundColor: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)" }}>
-      <div className="rounded-2xl p-6 w-full max-w-sm" style={{ backgroundColor: "#161616", border: "1px solid #3f1f1f" }}>
+      <div className="rounded-2xl p-6 w-full max-w-sm"
+        style={{ backgroundColor: "var(--bg-card)", border: "1px solid #3f1f1f" }}>
         <div className="flex items-center gap-3 mb-3" style={{ color: "#f87171" }}>
-          <AlertIcon />
-          <h3 className="font-bold text-base text-white" style={{ fontFamily: "'Syne',sans-serif" }}>{title}</h3>
+          <AlertIcon/>
+          <h3 className="font-bold text-base" style={{ fontFamily: "'Syne',sans-serif", color: "var(--text-primary)" }}>
+            {title}
+          </h3>
         </div>
-        <p className="text-gray-400 text-sm mb-6 leading-relaxed">{message}</p>
+        <p className="text-sm mb-6 leading-relaxed" style={{ color: "var(--text-muted)" }}>{message}</p>
         <div className="flex gap-3 justify-end">
           <button
             onClick={onCancel}
             disabled={loading}
-            className="rounded-xl px-4 py-2 text-sm font-medium text-gray-400 transition-all hover:text-white"
-            style={{ backgroundColor: "transparent", border: "1px solid #2a2a2a" }}
-          >
+            className="rounded-xl px-4 py-2 text-sm font-medium transition-all hover:opacity-80"
+            style={{ backgroundColor: "transparent", border: "1px solid var(--border-base)", color: "var(--text-muted)" }}>
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
             className="rounded-xl px-4 py-2 text-sm font-bold flex items-center gap-2 transition-all hover:opacity-80"
-            style={{ backgroundColor: "#2d0f0f", border: "1px solid #7f1d1d", color: "#f87171" }}
-          >
-            {loading && <SpinnerIcon />}
+            style={{ backgroundColor: "#2d0f0f", border: "1px solid #7f1d1d", color: "#f87171" }}>
+            {loading && <SpinnerIcon/>}
             {confirmLabel}
           </button>
         </div>
@@ -103,7 +103,6 @@ function ConfirmModal({ title, message, confirmLabel, onConfirm, onCancel, loadi
   );
 }
 
-// Toast notification
 function Toast({ message, type }) {
   return (
     <div
@@ -113,33 +112,28 @@ function Toast({ message, type }) {
         border: `1px solid ${type === "success" ? "#166534" : "#7f1d1d"}`,
         color: type === "success" ? "#4ade80" : "#f87171",
         animation: "slideUp 0.3s ease",
-      }}
-    >
-      {type === "success" ? <CheckIcon /> : <AlertIcon />}
+      }}>
+      {type === "success" ? <CheckIcon/> : <AlertIcon/>}
       {message}
     </div>
   );
 }
 
-// ─── Main Component ──────────────────────────────────────────────────────────
 export default function SettingsPage({ onMenuOpen, user }) {
-  // Loading / saving states
   const { updateAccent, updateTheme } = useAccent();
-  
-  const [pageLoading, setPageLoading]   = useState(true);
-  const [saving,      setSaving]        = useState(false);
-  const [toast,       setToast]         = useState(null); 
-  const [modal,       setModal]         = useState(null);
-  const [modalLoading, setModalLoading] = useState(false);
-  const [avatarFile, setAvatarFile] = useState(null);
 
-  // Account fields
+  const [pageLoading,  setPageLoading]  = useState(true);
+  const [saving,       setSaving]       = useState(false);
+  const [toast,        setToast]        = useState(null);
+  const [modal,        setModal]        = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [avatarFile,   setAvatarFile]   = useState(null);
+
   const [displayName, setDisplayName] = useState("");
   const [email,       setEmail]       = useState("");
   const [newPass,     setNewPass]     = useState("");
   const [confirmPass, setConfirmPass] = useState("");
 
-  // Notification fields
   const [notifs, setNotifs] = useState({
     dailyReminder:  true,
     streakAlert:    true,
@@ -149,48 +143,36 @@ export default function SettingsPage({ onMenuOpen, user }) {
   });
   const [reminderTime, setReminderTime] = useState("08:00");
 
-  // Appearance
-  const [accent, setAccent] = useState("var(--accent)");
-  const [theme, setTheme] = useState("dark");
+  const [accent,    setAccent]    = useState("var(--accent)");
+  const [theme,     setTheme]     = useState("dark");
+  const [dailyGoal, setDailyGoal] = useState(5);
+  const [focusMins, setFocusMins] = useState(25);
 
-  // Productivity
-  const [dailyGoal,  setDailyGoal]  = useState(5);
-  const [focusMins,  setFocusMins]  = useState(25);
-
-  // Avatar upload (local preview only for now)
   const [avatarPreview, setAvatarPreview] = useState(null);
 
-  // ── Load settings on mount ──────────────────────────────────────────────
   useEffect(() => {
     if (!user?.id) return;
-
     async function load() {
       setPageLoading(true);
       try {
-        // Populate account fields from auth user
         setDisplayName(user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "");
         setEmail(user.email ?? "");
+        if (user.user_metadata?.avatar_url) setAvatarPreview(user.user_metadata.avatar_url);
 
-        if (user.user_metadata?.avatar_url) {
-          setAvatarPreview(user.user_metadata.avatar_url);
-        }
-
-
-        // Fetch settings row
         const s = await fetchSettings(user.id);
         if (s) {
           setNotifs({
-            dailyReminder:  s.notification_daily_reminder  ?? true,
-            streakAlert:    s.notification_streak_alert    ?? true,
+            dailyReminder:  s.notification_daily_reminder   ?? true,
+            streakAlert:    s.notification_streak_alert     ?? true,
             dueDateWarning: s.notification_due_date_warning ?? true,
-            weeklyPride:    s.notification_weekly_pride    ?? false,
+            weeklyPride:    s.notification_weekly_pride     ?? false,
             celebrationSfx: s.notification_celebration_sfx ?? true,
           });
-          setReminderTime(s.reminder_time ?? "08:00");
-          setAccent(s.accent_color ?? "var(--accent)");
-          setTheme(s.theme ?? "dark");
-          setDailyGoal(s.daily_goal ?? 5);
-          setFocusMins(s.focus_mins ?? 25);
+          setReminderTime(s.reminder_time  ?? "08:00");
+          setAccent(s.accent_color         ?? "var(--accent)");
+          setTheme(s.theme                 ?? "dark");
+          setDailyGoal(s.daily_goal        ?? 5);
+          setFocusMins(s.focus_mins        ?? 25);
         }
       } catch (err) {
         showToast("Failed to load settings", "error");
@@ -199,85 +181,45 @@ export default function SettingsPage({ onMenuOpen, user }) {
         setPageLoading(false);
       }
     }
-
     load();
   }, [user?.id]);
 
-  // Propagate accent globally whenever it changes
-  useEffect(() => {
-   updateAccent(accent);
-  }, [accent]);
+  useEffect(() => { updateAccent(accent); }, [accent]);
+  useEffect(() => { localStorage.setItem("nudge_sfx", notifs.celebrationSfx ? "true" : "false"); }, [notifs.celebrationSfx]);
 
-  // Persist sfx preference to localStorage so sounds.js can read it
-  useEffect(() => {
-   localStorage.setItem("nudge_sfx", notifs.celebrationSfx ? "true" : "false");
-  }, [notifs.celebrationSfx]);
-
-  // ── Toast helper ────────────────────────────────────────────────────────
   const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
   }, []);
 
-  // ── Avatar preview ──────────────────────────────────────────────────────
   function handleAvatarChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      showToast("Image must be under 2MB", "error");
-      return;
-    }
+    if (file.size > 2 * 1024 * 1024) { showToast("Image must be under 2MB", "error"); return; }
     setAvatarFile(file);
     const reader = new FileReader();
     reader.onload = ev => setAvatarPreview(ev.target.result);
     reader.readAsDataURL(file);
   }
 
-  // ── Save all changes ─────────────────────────────────────────────────────
   async function handleSave() {
-    // Basic validation
-    if (newPass && newPass !== confirmPass) {
-      showToast("Passwords do not match", "error");
-      return;
-    }
-    if (newPass && newPass.length < 6) {
-      showToast("Password must be at least 6 characters", "error");
-      return;
-    }
+    if (newPass && newPass !== confirmPass) { showToast("Passwords do not match", "error"); return; }
+    if (newPass && newPass.length < 6)      { showToast("Password must be at least 6 characters", "error"); return; }
 
     setSaving(true);
     try {
       if (avatarFile) {
         const ext      = avatarFile.name.split(".").pop();
         const filePath = `${user.id}/avatar.${ext}`;
-  
-        const { error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(filePath, avatarFile, { upsert: true });
-  
+        const { error: uploadError } = await supabase.storage.from("avatars").upload(filePath, avatarFile, { upsert: true });
         if (uploadError) throw new Error(`Avatar upload failed: ${uploadError.message}`);
-  
-        const { data: urlData } = supabase.storage
-          .from("avatars")
-          .getPublicUrl(filePath);
-  
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
         const avatarUrl = urlData.publicUrl;
-  
-        // Save to users table
-        await supabase
-          .from("users")
-          .update({ avatar_url: avatarUrl })
-          .eq("id", user.id);
-  
-        // Save to auth metadata so Sidebar and ProfilePage pick it up
-        await supabase.auth.updateUser({
-          data: { avatar_url: avatarUrl }
-        });
-  
+        await supabase.from("users").update({ avatar_url: avatarUrl }).eq("id", user.id);
+        await supabase.auth.updateUser({ data: { avatar_url: avatarUrl } });
         setAvatarFile(null);
       }
 
-      // 1. Update settings row
       await updateSettings(user.id, {
         notification_daily_reminder:   notifs.dailyReminder,
         notification_streak_alert:     notifs.streakAlert,
@@ -288,15 +230,13 @@ export default function SettingsPage({ onMenuOpen, user }) {
         accent_color:                  accent,
         daily_goal:                    dailyGoal,
         focus_mins:                    focusMins,
-        theme,                        
+        theme,
       });
 
-      // 2. Update profile (name / email)
       const originalName  = user.user_metadata?.full_name ?? "";
       const originalEmail = user.email ?? "";
       const nameChanged   = displayName !== originalName;
       const emailChanged  = email !== originalEmail;
-
       if (nameChanged || emailChanged) {
         await updateProfile({
           displayName: nameChanged  ? displayName : undefined,
@@ -304,13 +244,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
         });
       }
 
-      // 3. Update password if provided
-      if (newPass) {
-        await updatePassword(newPass);
-        setNewPass("");
-        setConfirmPass("");
-      }
-
+      if (newPass) { await updatePassword(newPass); setNewPass(""); setConfirmPass(""); }
       showToast("Settings saved!", "success");
     } catch (err) {
       showToast(err.message ?? "Failed to save settings", "error");
@@ -320,7 +254,6 @@ export default function SettingsPage({ onMenuOpen, user }) {
     }
   }
 
-  // ── Reset to defaults ────────────────────────────────────────────────────
   function handleReset() {
     setNotifs({ dailyReminder: true, streakAlert: true, dueDateWarning: true, weeklyPride: false, celebrationSfx: true });
     setReminderTime("08:00");
@@ -333,7 +266,6 @@ export default function SettingsPage({ onMenuOpen, user }) {
     setConfirmPass("");
   }
 
-  // ── Export CSV ───────────────────────────────────────────────────────────
   async function handleExport() {
     try {
       const count = await exportTasksCSV(user.id);
@@ -345,7 +277,6 @@ export default function SettingsPage({ onMenuOpen, user }) {
     }
   }
 
-  // ── Clear tasks (confirmed) ───────────────────────────────────────────────
   async function handleClearTasks() {
     setModalLoading(true);
     try {
@@ -360,12 +291,10 @@ export default function SettingsPage({ onMenuOpen, user }) {
     }
   }
 
-  // ── Delete account (confirmed) ────────────────────────────────────────────
   async function handleDeleteAccount() {
     setModalLoading(true);
     try {
       await deleteAccount();
-      // user will be signed out and redirected by auth listener in App.jsx
     } catch (err) {
       showToast("Failed to delete account", "error");
       console.error(err);
@@ -376,43 +305,48 @@ export default function SettingsPage({ onMenuOpen, user }) {
   const toggleNotif = key => setNotifs(prev => ({ ...prev, [key]: !prev[key] }));
 
   const inputStyle = {
-    backgroundColor: "#111", border: "1px solid #2a2a2a", color: "#fff",
+    backgroundColor: "var(--bg-input)",
+    border:          "1px solid var(--border-base)",
+    color:           "var(--text-primary)",
     borderRadius: "12px", padding: "10px 14px", fontSize: "14px", outline: "none", width: "100%",
   };
 
   const avatarLetter = displayName?.charAt(0)?.toUpperCase() ?? "?";
 
-  // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#0a0a0a", fontFamily: "'DM Sans',sans-serif" }}>
+    <div className="min-h-screen flex flex-col"
+      style={{ backgroundColor: "var(--bg-base)", fontFamily: "'DM Sans',sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
         * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
-        input[type=time]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.4; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        ::-webkit-scrollbar-thumb { background: var(--bg-subtle); border-radius: 4px; }
+        [data-theme="dark"] input[type=time]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.4; }
+        [data-theme="light"] input[type=time]::-webkit-calendar-picker-indicator { opacity: 0.5; }
+        @keyframes spin    { to { transform: rotate(360deg); } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes pulse   { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
       `}</style>
 
       {/* Top bar */}
       <div className="sticky top-0 z-20 flex items-center gap-4 px-5 lg:px-8 py-5"
-        style={{ backgroundColor: "#0a0a0a", borderBottom: "1px solid #141414" }}>
-        <button onClick={() => onMenuOpen?.()} className="lg:hidden text-gray-400 hover:text-white transition-colors">
-          <MenuIcon />
+        style={{ backgroundColor: "var(--bg-base)", borderBottom: "1px solid var(--border-strong)" }}>
+        <button onClick={() => onMenuOpen?.()} className="lg:hidden transition-colors"
+          style={{ color: "var(--text-muted)" }}>
+          <MenuIcon/>
         </button>
         <div>
-          <p className="text-gray-500 text-xs tracking-widest font-medium">PREFERENCES</p>
-          <h1 className="text-2xl lg:text-3xl font-bold text-white" style={{ fontFamily: "'Syne',sans-serif" }}>Settings</h1>
+          <p className="text-xs tracking-widest font-medium" style={{ color: "var(--text-faint)" }}>PREFERENCES</p>
+          <h1 className="text-2xl lg:text-3xl font-bold"
+            style={{ fontFamily: "'Syne',sans-serif", color: "var(--text-primary)" }}>Settings</h1>
         </div>
       </div>
 
-      {/* Skeleton loader */}
       {pageLoading ? (
         <div className="flex-1 px-5 lg:px-8 py-6 max-w-2xl w-full space-y-5">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="rounded-2xl p-6 h-36" style={{ backgroundColor: "#161616", border: "1px solid #2a2a2a", animation: "pulse 1.4s ease infinite" }} />
+          {[1,2,3,4].map(i => (
+            <div key={i} className="rounded-2xl p-6 h-36"
+              style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-base)", animation: "pulse 1.4s ease infinite" }}/>
           ))}
         </div>
       ) : (
@@ -423,7 +357,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
             <div className="flex items-center gap-4 mb-5">
               <div className="relative w-14 h-14 flex-shrink-0">
                 {avatarPreview ? (
-                  <img src={avatarPreview} alt="avatar" className="w-14 h-14 rounded-full object-cover" />
+                  <img src={avatarPreview} alt="avatar" className="w-14 h-14 rounded-full object-cover"/>
                 ) : (
                   <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white"
                     style={{ backgroundColor: accent }}>
@@ -432,40 +366,48 @@ export default function SettingsPage({ onMenuOpen, user }) {
                 )}
               </div>
               <div>
-                <label className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-white transition-all hover:bg-[#2a2a2a] cursor-pointer"
-                  style={{ backgroundColor: "#1f1f1f", border: "1px solid #2a2a2a", display: "inline-flex" }}>
-                  <UploadIcon /> Change Photo
-                  <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleAvatarChange} />
+                <label className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all hover:bg-[var(--bg-subtle)] cursor-pointer"
+                  style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-base)", color: "var(--text-primary)", display: "inline-flex" }}>
+                  <UploadIcon/> Change Photo
+                  <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={handleAvatarChange}/>
                 </label>
-                <p className="text-gray-600 text-xs mt-1">JPG, PNG up to 2MB</p>
+                <p className="text-xs mt-1" style={{ color: "var(--text-disabled)" }}>JPG, PNG up to 2MB</p>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">DISPLAY NAME</label>
+                <label className="block text-xs font-semibold mb-2 tracking-widest" style={{ color: "var(--text-muted)" }}>
+                  DISPLAY NAME
+                </label>
                 <input value={displayName} onChange={e => setDisplayName(e.target.value)} style={inputStyle}
                   onFocus={e => e.target.style.borderColor = accent}
-                  onBlur={e  => e.target.style.borderColor = "#2a2a2a"} />
+                  onBlur={e  => e.target.style.borderColor = "var(--border-base)"}/>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">EMAIL</label>
+                <label className="block text-xs font-semibold mb-2 tracking-widest" style={{ color: "var(--text-muted)" }}>
+                  EMAIL
+                </label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={inputStyle}
                   onFocus={e => e.target.style.borderColor = accent}
-                  onBlur={e  => e.target.style.borderColor = "#2a2a2a"} />
+                  onBlur={e  => e.target.style.borderColor = "var(--border-base)"}/>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">NEW PASSWORD</label>
+                <label className="block text-xs font-semibold mb-2 tracking-widest" style={{ color: "var(--text-muted)" }}>
+                  NEW PASSWORD
+                </label>
                 <input type="password" value={newPass} onChange={e => setNewPass(e.target.value)}
                   placeholder="Leave blank to keep current" style={inputStyle}
                   onFocus={e => e.target.style.borderColor = accent}
-                  onBlur={e  => e.target.style.borderColor = "#2a2a2a"} />
+                  onBlur={e  => e.target.style.borderColor = "var(--border-base)"}/>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-2 tracking-widest">CONFIRM PASSWORD</label>
+                <label className="block text-xs font-semibold mb-2 tracking-widest" style={{ color: "var(--text-muted)" }}>
+                  CONFIRM PASSWORD
+                </label>
                 <input type="password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
                   placeholder="Repeat new password" style={inputStyle}
                   onFocus={e => e.target.style.borderColor = accent}
-                  onBlur={e  => e.target.style.borderColor = "#2a2a2a"} />
+                  onBlur={e  => e.target.style.borderColor = "var(--border-base)"}/>
               </div>
             </div>
           </Section>
@@ -473,48 +415,49 @@ export default function SettingsPage({ onMenuOpen, user }) {
           {/* Notifications */}
           <Section title="Notifications" sub="Control how and when Nudge reaches you">
             <div className="-mt-2">
-              <NotifRow label="Daily task reminder"       sub="Get nudged each morning to set your tasks"  on={notifs.dailyReminder}   onChange={() => toggleNotif("dailyReminder")}   accent={accent} />
-              <NotifRow label="Streak alert"              sub="Know when your streak is at risk"           on={notifs.streakAlert}     onChange={() => toggleNotif("streakAlert")}     accent={accent} />
-              <NotifRow label="Due date warning"          sub="Get warned 1 hour before a task is due"     on={notifs.dueDateWarning}  onChange={() => toggleNotif("dueDateWarning")}  accent={accent} />
-              <NotifRow label="Weekly pride report"       sub="A summary of everything you crushed"        on={notifs.weeklyPride}     onChange={() => toggleNotif("weeklyPride")}     accent={accent} />
-              <NotifRow label="Celebration sound effects" sub="Play sounds when you complete tasks"        on={notifs.celebrationSfx}  onChange={() => toggleNotif("celebrationSfx")}  accent={accent} />
+              <NotifRow label="Daily task reminder"       sub="Get nudged each morning to set your tasks"  on={notifs.dailyReminder}   onChange={() => toggleNotif("dailyReminder")}   accent={accent}/>
+              <NotifRow label="Streak alert"              sub="Know when your streak is at risk"           on={notifs.streakAlert}     onChange={() => toggleNotif("streakAlert")}     accent={accent}/>
+              <NotifRow label="Due date warning"          sub="Get warned 1 hour before a task is due"     on={notifs.dueDateWarning}  onChange={() => toggleNotif("dueDateWarning")}  accent={accent}/>
+              <NotifRow label="Weekly pride report"       sub="A summary of everything you crushed"        on={notifs.weeklyPride}     onChange={() => toggleNotif("weeklyPride")}     accent={accent}/>
+              <NotifRow label="Celebration sound effects" sub="Play sounds when you complete tasks"        on={notifs.celebrationSfx}  onChange={() => toggleNotif("celebrationSfx")}  accent={accent}/>
             </div>
             <div className="flex items-center gap-3 mt-4">
-              <span className="text-gray-400 text-sm">Reminder time:</span>
+              <span className="text-sm" style={{ color: "var(--text-muted)" }}>Reminder time:</span>
               <input type="time" value={reminderTime} onChange={e => setReminderTime(e.target.value)}
-                className="rounded-xl px-3 py-1.5 text-sm text-white outline-none"
-                style={{ backgroundColor: "#111", border: "1px solid #2a2a2a" }}
+                className="rounded-xl px-3 py-1.5 text-sm outline-none"
+                style={{ backgroundColor: "var(--bg-input)", border: "1px solid var(--border-base)", color: "var(--text-primary)" }}
                 onFocus={e => e.target.style.borderColor = accent}
-                onBlur={e  => e.target.style.borderColor = "#2a2a2a"} />
+                onBlur={e  => e.target.style.borderColor = "var(--border-base)"}/>
             </div>
           </Section>
 
           {/* Appearance */}
           <Section title="Appearance" sub="Make Nudge feel like yours">
-          <div className="flex items-center justify-between py-3 mb-4" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
-            <div>
-              <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Theme</p>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>Switch between dark and light mode</p>
+            <div className="flex items-center justify-between py-3 mb-4"
+              style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+              <div>
+                <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Theme</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>Switch between dark and light mode</p>
+              </div>
+              <div className="flex items-center gap-1 rounded-xl p-1" style={{ backgroundColor: "var(--bg-hover)" }}>
+                {["dark","light"].map(t => (
+                  <button key={t} onClick={() => { setTheme(t); updateTheme(t); }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize"
+                    style={{
+                      backgroundColor: theme === t ? "var(--bg-subtle)"   : "transparent",
+                      color:           theme === t ? "var(--text-primary)" : "var(--text-muted)",
+                      border:          theme === t ? "1px solid var(--border-base)" : "1px solid transparent",
+                    }}>
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-1 rounded-xl p-1" style={{ backgroundColor: "var(--bg-hover)" }}>
-              {["dark", "light"].map(t => (
-                <button
-                  key={t}
-                  onClick={() => { setTheme(t); updateTheme(t); }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize"
-                  style={{
-                    backgroundColor: theme === t ? "var(--bg-subtle)" : "transparent",
-                    color:  theme === t ? "var(--text-primary)" : "var(--text-muted)",
-                    border: theme === t ? "1px solid var(--border-base)" : "1px solid transparent",
-                  }}>
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div> 
             <div>
-              <p className="text-white text-sm font-medium mb-0.5">Accent Colour</p>
-              <p className="text-gray-500 text-xs mb-3">Changes buttons, highlights and active states</p>
+              <p className="text-sm font-medium mb-0.5" style={{ color: "var(--text-primary)" }}>Accent Colour</p>
+              <p className="text-xs mb-3" style={{ color: "var(--text-faint)" }}>
+                Changes buttons, highlights and active states
+              </p>
               <div className="flex flex-wrap gap-2">
                 {ACCENT_COLORS.map(c => (
                   <button key={c} onClick={() => setAccent(c)}
@@ -522,9 +465,9 @@ export default function SettingsPage({ onMenuOpen, user }) {
                     style={{
                       backgroundColor: c,
                       border:    accent === c ? "2.5px solid #fff" : "2.5px solid transparent",
-                      transform: accent === c ? "scale(1.15)" : "scale(1)",
+                      transform: accent === c ? "scale(1.15)"      : "scale(1)",
                     }}>
-                    {accent === c && <CheckIcon />}
+                    {accent === c && <CheckIcon/>}
                   </button>
                 ))}
               </div>
@@ -533,34 +476,40 @@ export default function SettingsPage({ onMenuOpen, user }) {
 
           {/* Productivity */}
           <Section title="Productivity" sub="Tune Nudge to match how you actually work">
-            <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid #1f1f1f" }}>
+            <div className="flex items-center justify-between py-3"
+              style={{ borderBottom: "1px solid var(--border-subtle)" }}>
               <div>
-                <p className="text-white text-sm font-medium">Daily task goal</p>
-                <p className="text-gray-500 text-xs">How many tasks you aim to complete each day</p>
+                <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Daily task goal</p>
+                <p className="text-xs" style={{ color: "var(--text-faint)" }}>How many tasks you aim to complete each day</p>
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={() => setDailyGoal(g => Math.max(1, g - 1))}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-lg font-bold transition-all hover:bg-[#2a2a2a]"
-                  style={{ backgroundColor: "#1f1f1f", border: "1px solid #2a2a2a" }}>-</button>
-                <span className="text-white font-bold w-6 text-center">{dailyGoal}</span>
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-lg font-bold transition-all hover:bg-[var(--bg-subtle)]"
+                  style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-base)", color: "var(--text-primary)" }}>
+                  -
+                </button>
+                <span className="font-bold w-6 text-center" style={{ color: "var(--text-primary)" }}>{dailyGoal}</span>
                 <button onClick={() => setDailyGoal(g => g + 1)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-lg font-bold transition-all hover:bg-[#2a2a2a]"
-                  style={{ backgroundColor: "#1f1f1f", border: "1px solid #2a2a2a" }}>+</button>
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-lg font-bold transition-all hover:bg-[var(--bg-subtle)]"
+                  style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-base)", color: "var(--text-primary)" }}>
+                  +
+                </button>
               </div>
             </div>
-            <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid #1f1f1f" }}>
+            <div className="flex items-center justify-between py-3"
+              style={{ borderBottom: "1px solid var(--border-subtle)" }}>
               <div>
-                <p className="text-white text-sm font-medium">Default focus timer</p>
-                <p className="text-gray-500 text-xs">Default duration when you start focus mode</p>
+                <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Default focus timer</p>
+                <p className="text-xs" style={{ color: "var(--text-faint)" }}>Default duration when you start focus mode</p>
               </div>
               <div className="flex gap-1.5">
                 {FOCUS_OPTIONS.map(opt => (
                   <button key={opt.value} onClick={() => setFocusMins(opt.value)}
                     className="px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
                     style={{
-                      backgroundColor: focusMins === opt.value ? accent : "#1f1f1f",
-                      color:  focusMins === opt.value ? "#fff" : "#9CA3AF",
-                      border: `1px solid ${focusMins === opt.value ? accent : "#2a2a2a"}`,
+                      backgroundColor: focusMins === opt.value ? accent             : "var(--bg-hover)",
+                      color:           focusMins === opt.value ? "#fff"             : "var(--text-muted)",
+                      border:          `1px solid ${focusMins === opt.value ? accent : "var(--border-base)"}`,
                     }}>
                     {opt.label}
                   </button>
@@ -569,30 +518,41 @@ export default function SettingsPage({ onMenuOpen, user }) {
             </div>
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="text-white text-sm font-medium">XP per task</p>
-                <p className="text-gray-500 text-xs">Short tasks earn 50 XP, longer tasks earn 75 XP</p>
+                <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>XP per task</p>
+                <p className="text-xs" style={{ color: "var(--text-faint)" }}>
+                  Short tasks earn 50 XP, longer tasks earn 75 XP
+                </p>
               </div>
-              <span className="rounded-xl px-3 py-1.5 text-xs font-semibold text-white" style={{ backgroundColor: accent }}>Auto</span>
+              <span className="rounded-xl px-3 py-1.5 text-xs font-semibold text-white"
+                style={{ backgroundColor: accent }}>
+                Auto
+              </span>
             </div>
           </Section>
 
           {/* Privacy */}
           <Section title="Privacy and Data" sub="Your data, your control">
-            <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid #1f1f1f" }}>
+            <div className="flex items-center justify-between py-3"
+              style={{ borderBottom: "1px solid var(--border-subtle)" }}>
               <div>
-                <p className="text-white text-sm font-medium">Export my data</p>
-                <p className="text-gray-500 text-xs">Download all your tasks and history as a CSV file</p>
+                <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Export my data</p>
+                <p className="text-xs" style={{ color: "var(--text-faint)" }}>
+                  Download all your tasks and history as a CSV file
+                </p>
               </div>
               <button onClick={handleExport}
-                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-white transition-all hover:opacity-80"
-                style={{ backgroundColor: "#1f1f1f", border: "1px solid #2a2a2a" }}>
-                <DownloadIcon /> Export CSV
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all hover:opacity-80"
+                style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-base)", color: "var(--text-primary)" }}>
+                <DownloadIcon/> Export CSV
               </button>
             </div>
-            <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid #1f1f1f" }}>
+            <div className="flex items-center justify-between py-3"
+              style={{ borderBottom: "1px solid var(--border-subtle)" }}>
               <div>
-                <p className="text-white text-sm font-medium">Clear all tasks</p>
-                <p className="text-gray-500 text-xs">Permanently delete all tasks. This cannot be undone.</p>
+                <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Clear all tasks</p>
+                <p className="text-xs" style={{ color: "var(--text-faint)" }}>
+                  Permanently delete all tasks. This cannot be undone.
+                </p>
               </div>
               <button onClick={() => setModal({ type: "clearTasks" })}
                 className="rounded-xl px-3 py-2 text-sm font-medium transition-all hover:opacity-80"
@@ -603,7 +563,9 @@ export default function SettingsPage({ onMenuOpen, user }) {
             <div className="flex items-center justify-between py-3">
               <div>
                 <p className="text-sm font-medium" style={{ color: "#EF4444" }}>Delete account</p>
-                <p className="text-gray-500 text-xs">Permanently remove your account and all data</p>
+                <p className="text-xs" style={{ color: "var(--text-faint)" }}>
+                  Permanently remove your account and all data
+                </p>
               </div>
               <button onClick={() => setModal({ type: "deleteAccount" })}
                 className="rounded-xl px-3 py-2 text-sm font-medium transition-all hover:opacity-80"
@@ -613,17 +575,17 @@ export default function SettingsPage({ onMenuOpen, user }) {
             </div>
           </Section>
 
-          {/* Footer actions */}
+          {/* Footer */}
           <div className="flex items-center justify-end gap-3 pb-8">
             <button onClick={handleReset}
-              className="rounded-2xl px-5 py-2.5 text-sm font-medium text-gray-400 transition-all hover:text-white"
-              style={{ backgroundColor: "transparent", border: "1px solid #2a2a2a" }}>
+              className="rounded-2xl px-5 py-2.5 text-sm font-medium transition-all hover:opacity-80"
+              style={{ backgroundColor: "transparent", border: "1px solid var(--border-base)", color: "var(--text-muted)" }}>
               Reset to defaults
             </button>
             <button onClick={handleSave} disabled={saving}
               className="rounded-2xl px-6 py-2.5 text-sm font-bold text-white flex items-center gap-2 transition-all hover:opacity-90"
               style={{ backgroundColor: accent, opacity: saving ? 0.7 : 1 }}>
-              {saving && <SpinnerIcon />}
+              {saving && <SpinnerIcon/>}
               {saving ? "Saving..." : "Save Changes"}
             </button>
           </div>
@@ -631,7 +593,6 @@ export default function SettingsPage({ onMenuOpen, user }) {
         </div>
       )}
 
-      {/* Confirmation Modals */}
       {modal?.type === "clearTasks" && (
         <ConfirmModal
           title="Clear all tasks?"
@@ -653,8 +614,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
         />
       )}
 
-      {/* Toast */}
-      {toast && <Toast message={toast.message} type={toast.type} />}
+      {toast && <Toast message={toast.message} type={toast.type}/>}
     </div>
   );
 }

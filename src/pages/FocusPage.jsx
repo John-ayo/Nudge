@@ -10,7 +10,7 @@ function NudgeLogo() {
   return (
     <span style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 700, fontSize: "20px" }}>
       <span style={{ color: "var(--accent)" }}>Nu</span>
-      <span style={{ color: "#F5F5F5" }}>dge</span>
+      <span style={{ color: "var(--text-primary)" }}>dge</span>
       <span style={{ color: "var(--accent)" }}>.</span>
     </span>
   );
@@ -21,14 +21,16 @@ function CelebrationOverlay({ taskTitle, xpAwarded, newStreak, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: "rgba(0,0,0,0.92)" }} onClick={onClose}>
       <div className="w-full max-w-md rounded-2xl p-8 text-center"
-        style={{ backgroundColor: "#111", border: "1px solid #2a2a2a" }}>
+        style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-base)" }}>
         <div className="flex justify-center mb-4"><PartyPopper size={48} color="var(--accent)"/></div>
         <h2 className="text-3xl lg:text-4xl font-bold mb-2"
           style={{ fontFamily: "'Syne',sans-serif", color: "#F59E0B" }}>
           WELL DONE!
         </h2>
-        <p className="text-white text-base font-semibold mb-1">{taskTitle}</p>
-        <p className="text-gray-400 text-sm mb-6 flex items-center justify-center gap-1">
+        <p className="text-base font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
+          {taskTitle}
+        </p>
+        <p className="text-sm mb-6 flex items-center justify-center gap-1" style={{ color: "var(--text-muted)" }}>
           Focus session complete! <Flame size={16} color="#F97316"/>
         </p>
         <div className="flex gap-3 justify-center mb-6 flex-wrap">
@@ -41,7 +43,7 @@ function CelebrationOverlay({ taskTitle, xpAwarded, newStreak, onClose }) {
             <Flame size={14} color="#F97316"/> {newStreak} day streak
           </span>
         </div>
-        <p className="text-gray-600 text-xs">Tap anywhere to continue</p>
+        <p className="text-xs" style={{ color: "var(--text-disabled)" }}>Tap anywhere to continue</p>
       </div>
     </div>
   );
@@ -55,7 +57,6 @@ export default function FocusPage() {
 
   const task = location.state?.task ?? null;
 
-  // totalSecs and timeLeft are stateful so settings can update them async
   const [totalSecs,   setTotalSecs]   = useState((task?.est ?? 25) * 60);
   const [timeLeft,    setTimeLeft]    = useState((task?.est ?? 25) * 60);
   const [sessionMins, setSessionMins] = useState(task?.est ?? 25);
@@ -65,7 +66,6 @@ export default function FocusPage() {
 
   const completedRef = useRef(false);
 
-  // If no task, read focusMins from settings
   useEffect(() => {
     if (!task && user?.id) {
       fetchSettings(user.id).then(s => {
@@ -79,12 +79,10 @@ export default function FocusPage() {
     }
   }, []);
 
-  // Track session start once
   useEffect(() => {
     if (task) trackFocusSessionStarted({ task_id: task.id, est: task.est });
   }, []);
 
-  // Countdown
   useEffect(() => {
     if (!running || timeLeft <= 0) return;
     const id = setInterval(() => {
@@ -93,7 +91,6 @@ export default function FocusPage() {
     return () => clearInterval(id);
   }, [running]);
 
-  // Watch for natural completion
   useEffect(() => {
     if (timeLeft === 0 && !completedRef.current) {
       handleComplete();
@@ -105,7 +102,6 @@ export default function FocusPage() {
     completedRef.current = true;
     setCompleted(true);
     setRunning(false);
-
     if (task && !task.done) {
       await toggleTask(task, (data) => setCelebration(data));
     } else {
@@ -115,11 +111,7 @@ export default function FocusPage() {
 
   const handlePause   = () => setRunning(prev => !prev);
   const handleAbandon = () => navigate(-1);
-
-  const handleCelebrationClose = () => {
-    setCelebration(null);
-    navigate("/dashboard");
-  };
+  const handleCelebrationClose = () => { setCelebration(null); navigate("/dashboard"); };
 
   const mins = String(Math.floor(timeLeft / 60)).padStart(2, "0");
   const secs = String(timeLeft % 60).padStart(2, "0");
@@ -138,18 +130,21 @@ export default function FocusPage() {
 
   return (
     <div className="min-h-screen flex flex-col"
-      style={{ backgroundColor: "#000", fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');*{box-sizing:border-box;}`}</style>
+      style={{ backgroundColor: "var(--bg-base)", fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
+        * { box-sizing: border-box; }
+      `}</style>
 
       {/* Header */}
       <div className="flex items-center justify-between px-5 lg:px-8 py-5">
         <NudgeLogo/>
         <button
           onClick={handleAbandon}
-          className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white transition-all"
-          style={{ border: "1px solid #333" }}
-          onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#fff"; e.currentTarget.style.color = "#000"; }}
-          onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#fff"; }}>
+          className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all"
+          style={{ border: "1px solid var(--border-base)", color: "var(--text-primary)", backgroundColor: "transparent" }}
+          onMouseEnter={e => { e.currentTarget.style.backgroundColor = "var(--accent)"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "var(--accent)"; }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--text-primary)"; e.currentTarget.style.borderColor = "var(--border-base)"; }}>
           ← Exit Focus
         </button>
       </div>
@@ -158,18 +153,18 @@ export default function FocusPage() {
       <div className="flex-1 flex flex-col items-center justify-center gap-8 px-5 pb-10">
 
         <div className="text-center px-4">
-          <p className="text-xs font-semibold tracking-widest mb-3" style={{ color: "#555" }}>
+          <p className="text-xs font-semibold tracking-widest mb-3" style={{ color: "var(--text-disabled)" }}>
             FOCUS MODE
           </p>
-          <h1 className="text-2xl lg:text-4xl font-bold text-white"
-            style={{ fontFamily: "'Syne', sans-serif", maxWidth: "560px", lineHeight: "1.2", wordBreak: "break-word" }}>
+          <h1 className="text-2xl lg:text-4xl font-bold"
+            style={{ fontFamily: "'Syne', sans-serif", color: "var(--text-primary)", maxWidth: "560px", lineHeight: "1.2", wordBreak: "break-word" }}>
             {task?.title ?? "Focus Session"}
           </h1>
         </div>
 
         <div className="relative flex items-center justify-center">
           <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-            <circle cx={cx} cy={cy} r={r} fill="none" stroke="#222" strokeWidth="1.5"/>
+            <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--bg-subtle)" strokeWidth="1.5"/>
             <circle
               cx={cx} cy={cy} r={r}
               fill="none"
@@ -187,40 +182,41 @@ export default function FocusPage() {
           </svg>
 
           <div className="absolute flex flex-col items-center justify-center select-none">
-            <span className="font-bold text-white leading-none"
+            <span className="font-bold leading-none"
               style={{
                 fontFamily: "'Syne', sans-serif",
                 fontSize: size === 220 ? "58px" : "72px",
                 letterSpacing: "-2px",
+                color: "var(--text-primary)",
               }}>
               {mins}:{secs}
             </span>
-            <span className="text-gray-500 text-sm mt-2">
+            <span className="text-sm mt-2" style={{ color: "var(--text-faint)" }}>
               {sessionMins} min session
             </span>
           </div>
         </div>
 
-        <p className="text-gray-600 text-sm italic">Stay locked in.</p>
+        <p className="text-sm italic" style={{ color: "var(--text-disabled)" }}>Stay locked in.</p>
 
         <div className="flex items-center justify-center gap-3 flex-wrap px-4">
           <button
             onClick={handlePause}
             disabled={completed}
-            className="rounded-full px-5 py-2.5 text-sm font-medium text-white transition-all disabled:opacity-30"
-            style={{ border: "1px solid #555" }}
-            onMouseEnter={e => { if (!completed) { e.currentTarget.style.backgroundColor = "#fff"; e.currentTarget.style.color = "#000"; }}}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#fff"; }}>
+            className="rounded-full px-5 py-2.5 text-sm font-medium transition-all disabled:opacity-30"
+            style={{ border: "1px solid var(--border-base)", color: "var(--text-primary)", backgroundColor: "transparent" }}
+            onMouseEnter={e => { if (!completed) { e.currentTarget.style.backgroundColor = "var(--accent)"; e.currentTarget.style.color = "#fff"; }}}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--text-primary)"; }}>
             {running ? "II Pause" : "▶ Resume"}
           </button>
 
           <button
             onClick={handleComplete}
             disabled={completed}
-            className="rounded-full px-5 py-2.5 text-sm font-medium text-white transition-all disabled:opacity-30"
-            style={{ border: "1px solid #555" }}
-            onMouseEnter={e => { if (!completed) { e.currentTarget.style.backgroundColor = "#fff"; e.currentTarget.style.color = "#000"; }}}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#fff"; }}>
+            className="rounded-full px-5 py-2.5 text-sm font-medium transition-all disabled:opacity-30"
+            style={{ border: "1px solid var(--border-base)", color: "var(--text-primary)", backgroundColor: "transparent" }}
+            onMouseEnter={e => { if (!completed) { e.currentTarget.style.backgroundColor = "var(--accent)"; e.currentTarget.style.color = "#fff"; }}}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--text-primary)"; }}>
             ✓ Done Early
           </button>
 

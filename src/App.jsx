@@ -18,6 +18,10 @@ import SettingsPage    from "./pages/SettingsPage";
 import NotFoundPage    from "./pages/NotFoundPage";
 import ServerErrorPage from "./pages/ServerErrorPage";
 import FocusPage       from "./pages/FocusPage";
+import TermsConditionsPage from "./pages/TermsConditionsPage";
+import PrivacyPolicyPage   from "./pages/PrivacyPolicyPage";
+
+// Components
 
 import Sidebar from "./components/Sidebar";
 
@@ -71,6 +75,9 @@ function AppShell() {
             <Route path="/account"    element={<ProtectedRoute><ProfilePage    onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
             <Route path="/settings"   element={<ProtectedRoute><SettingsPage   onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
             <Route path="*" element={<NotFoundPage />} />
+            <Route path="/terms" element={<TermsConditionsPage />} />
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+
           </Routes>
         </div>
       </div>

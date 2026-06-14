@@ -29,7 +29,7 @@ export default function BadgeModal({ badgeKey, onDismiss }) {
       <div
         className="relative rounded-3xl p-8 flex flex-col items-center text-center max-w-xs w-full"
         style={{
-          backgroundColor: "#0f0f0f",
+          backgroundColor: "var(--bg-card)",
           border: "1px solid rgba(108,99,255,0.3)",
           boxShadow: "0 0 80px rgba(108,99,255,0.18), 0 0 30px rgba(108,99,255,0.08)",
           animation: "bmPopIn 0.4s cubic-bezier(0.34,1.56,0.64,1)",
@@ -59,8 +59,8 @@ export default function BadgeModal({ badgeKey, onDismiss }) {
 
         {/* Name */}
         <h2
-          className="text-2xl font-bold text-white mb-2"
-          style={{ fontFamily: "'Syne',sans-serif" }}
+          className="text-2xl font-bold mb-2"
+          style={{ fontFamily: "'Syne',sans-serif", color: "var(--text-primary)" }}
         >
           {badge.name}
         </h2>
@@ -68,13 +68,13 @@ export default function BadgeModal({ badgeKey, onDismiss }) {
         {/* Category */}
         <span
           className="rounded-full px-3 py-1 text-xs font-semibold mb-4"
-          style={{ backgroundColor: "#1a1a1a", color: "#777777", border: "1px solid #2a2a2a" }}
+          style={{ backgroundColor: "var(--bg-input)", color: "var(--text-muted)", border: "1px solid var(--border-base)" }}
         >
           {badge.category}
         </span>
 
         {/* Description */}
-        <p className="text-gray-400 text-sm leading-relaxed mb-8">
+        <p className="text-sm leading-relaxed mb-8" style={{ color: "var(--text-muted)" }}>
           {badge.description}
         </p>
 

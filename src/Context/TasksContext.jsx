@@ -70,6 +70,11 @@ export function TasksProvider({ children }) {
   }, [user]);
 
   // ─── Realtime XP ───────────────────────────────────────────────────────────
+  // Kept as a sync mechanism for XP grants that don't originate from this
+  // client (e.g. a cron-awarded bonus, or the same account active on another
+  // device). toggleTask below now updates totalXP directly too, so if this
+  // subscription is actually delivering events, completing a task could
+  // double-count. See note in toggleTask.
   useEffect(() => {
     if (!user) return;
 
@@ -112,6 +117,15 @@ export function TasksProvider({ children }) {
         if (res.data) {
           const { xp_awarded, new_streak, new_badges = [] } = res.data;
 
+          // FIX 4: totalXP was only ever updated via the xp_log realtime
+          // subscription. If that subscription isn't actually delivering
+          // events (table not added to the realtime publication, or no
+          // RLS SELECT policy on xp_log), totalXP would only refresh on
+          // a full reload. Updating it directly here, the same way streak
+          // already is below, guarantees the UI reflects the award
+          // immediately regardless of realtime configuration.
+          setTotalXP(prev => prev + (xp_awarded ?? 0));
+
           setStreak(prev => ({
             ...prev,
             current: new_streak,
@@ -127,7 +141,6 @@ export function TasksProvider({ children }) {
 
           trackTaskCompleted({ task_id: task.id, priority: task.priority, xp_awarded, new_streak });
 
-          // FIX 2: removed erroneous JSX return that was here inside toggleTask
           if (new_badges.length > 0) {
             setBadges(prev => [
               ...prev,
@@ -224,7 +237,7 @@ export function TasksProvider({ children }) {
       tasks, categories, totalXP, streak, loading,
       toggleTask, addTask, editTask, removeTask,
       setTasks, setCategories,
-      badges,          // FIX 3: was missing
+      badges,
       pendingBadges, dismissBadge,
     }}>
       {children}

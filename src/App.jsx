@@ -25,15 +25,15 @@ import PrivacyPolicyPage   from "./pages/PrivacyPolicyPage";
 
 import Sidebar from "./components/Sidebar";
 
-const NO_SIDEBAR = ["/", "/login", "/signup", "/500", "/focus"];
+const NO_SIDEBAR = ["/", "/login", "/signup", "/500", "/focus", "/terms", "/privacy"];
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#0a0a0a" }}>
-        <div className="w-6 h-6 border-2 border-[#6C63FF] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "var(--bg-base)" }}>
+        <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -51,7 +51,7 @@ function AppShell() {
   const showSidebar = !NO_SIDEBAR.includes(location.pathname);
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: "#0a0a0a" }}>
+    <div className="min-h-screen flex" style={{ backgroundColor: "var(--bg-base)" }}>
 
       {showSidebar && (
         <>
@@ -68,6 +68,8 @@ function AppShell() {
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/500"    element={<ServerErrorPage />} />
             <Route path="/focus"  element={<FocusPage />} />
+            <Route path="/terms"   element={<TermsConditionsPage />} />
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
             <Route path="/dashboard"  element={<ProtectedRoute><DashboardPage  onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
             <Route path="/tasks"      element={<ProtectedRoute><MyTasksPage    onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
             <Route path="/categories" element={<ProtectedRoute><CategoriesPage onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
@@ -75,9 +77,6 @@ function AppShell() {
             <Route path="/account"    element={<ProtectedRoute><ProfilePage    onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
             <Route path="/settings"   element={<ProtectedRoute><SettingsPage   onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
             <Route path="*" element={<NotFoundPage />} />
-            <Route path="/terms" element={<TermsConditionsPage />} />
-            <Route path="/privacy" element={<PrivacyPolicyPage />} />
-
           </Routes>
         </div>
       </div>

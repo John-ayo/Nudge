@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import ScrollReveal from "../components/ScrollReveal";
 
 import "../tailwind-customs.css";
@@ -36,6 +36,8 @@ function ConfettiPiece({ x, color, delay }) {
     />
   );
 }
+
+// EOF newline
 
 // ── Interactive Hero Task Card ────────────────────────────────
 function generateConfetti() {
@@ -689,6 +691,23 @@ export default function LandingPage({ onLogin, onSignup }) {
             </div>
             <div className="text-xs" style={{ color: C.greyLight }}>
               © 2026 Nudge. Built for doers.
+            </div>
+          </div>
+
+          <div
+            className="footer-inner mt-6 pt-6 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4"
+            style={{ borderTop: `1px solid ${C.grey}` }}
+          >
+            <div className="flex gap-6 flex-wrap">
+              <Link to="/privacy" className="nav-link text-xs">
+                Privacy Policy
+              </Link>
+              <Link to="/terms" className="nav-link text-xs">
+                Terms &amp; Conditions
+              </Link>
+            </div>
+            <div className="text-xs" style={{ color: C.greyLight }}>
+              {/* Need help? <a href="mailto:legal@nudgeapp.io" className="nav-link">legal@nudgeapp.io</a> */}
             </div>
           </div>
         </footer>

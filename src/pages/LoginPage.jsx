@@ -27,7 +27,6 @@ export default function LoginPage() {
     setError("");
     try {
       await signInWithGoogle();
-      // Google OAuth redirects automatically, no navigate needed
     } catch (err) {
       setError(err.message || "Google sign-in failed.");
     }
@@ -61,7 +60,7 @@ export default function LoginPage() {
         <div
           className="absolute bottom-0 left-0 w-96 h-96 pointer-events-none opacity-15"
           style={{
-            background: "radial-gradient(circle,var(--accent)ccent) 0%,transparent 70%)",
+            background: "radial-gradient(circle,var(--accent) 0%,transparent 70%)",
             transform: "translate(-35%,35%)",
           }}
         />
@@ -182,6 +181,17 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            <p className="text-[#555] text-xs leading-relaxed">
+              By logging in, you agree to our{" "}
+              <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:text-[#8B85FF] underline transition-colors">
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:text-[#8B85FF] underline transition-colors">
+                Privacy Policy
+              </Link>.
+            </p>
 
             <button
               type="submit"

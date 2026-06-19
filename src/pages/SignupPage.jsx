@@ -7,6 +7,8 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showAgreementError, setShowAgreementError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -14,13 +16,17 @@ export default function SignupPage() {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+
+    if (!agreedToTerms) {
+      setShowAgreementError(true);
+      return;
+    }
     if (password !== confirmPassword) return;
+
     setError("");
     setLoading(true);
     try {
       await signUp(email, password, fullName);
-      // Supabase sends a confirmation email by default.
-      // Show success state instead of redirecting immediately.
       setSuccess(true);
     } catch (err) {
       setError(err.message || "Signup failed. Please try again.");
@@ -40,6 +46,8 @@ export default function SignupPage() {
 
   const inputBase =
     "w-full rounded-2xl px-4 py-3 text-sm outline-none transition-all duration-200 text-white placeholder-[#555]";
+
+  const submitDisabled = loading || Boolean(confirmPassword && confirmPassword !== password);
 
   return (
     <div
@@ -239,11 +247,47 @@ export default function SignupPage() {
                   )}
                 </div>
 
+                {/* Terms agreement */}
+                <div>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      id="agree-terms"
+                      checked={agreedToTerms}
+                      onChange={(e) => {
+                        setAgreedToTerms(e.target.checked);
+                        if (e.target.checked) setShowAgreementError(false);
+                      }}
+                      className="mt-0.5 w-4 h-4 rounded cursor-pointer flex-shrink-0"
+                      style={{ accentColor: "var(--accent)" }}
+                    />
+                    <label htmlFor="agree-terms" className="text-xs text-[#999] leading-relaxed cursor-pointer">
+                      I agree to the{" "}
+                      <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:text-[#8B85FF] underline transition-colors">
+                        Terms and Conditions
+                      </Link>{" "}
+                      and{" "}
+                      <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:text-[#8B85FF] underline transition-colors">
+                        Privacy Policy
+                      </Link>.
+                    </label>
+                  </div>
+                  {showAgreementError && (
+                    <p className="text-red-400 text-xs mt-2 ml-7">
+                      You need to agree to the Terms and Privacy Policy to create an account.
+                    </p>
+                  )}
+                </div>
+
                 <button
                   type="submit"
-                  disabled={loading || Boolean(confirmPassword && confirmPassword !== password)}
+                  disabled={submitDisabled}
                   className="w-full rounded-2xl py-3 text-sm font-bold text-white transition-all duration-200 mt-2 hover:opacity-90 disabled:opacity-50"
-                  style={{ backgroundColor: "var(--accent)" }}
+                  style={{
+                    backgroundColor: "var(--accent)",
+                    opacity: !agreedToTerms && !submitDisabled ? 0.45 : undefined,
+                    cursor: !agreedToTerms ? "not-allowed" : undefined,
+                  }}
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
@@ -256,14 +300,6 @@ export default function SignupPage() {
                   ) : "Create My Account"}
                 </button>
               </form>
-
-              <p className="text-center text-[#444] text-xs mt-5 leading-relaxed">
-                By signing up, you agree to our{" "}
-                <span className="underline cursor-pointer hover:text-[#888] transition-colors">Terms</span>{" "}
-                and{" "}
-                <span className="underline cursor-pointer hover:text-[#888] transition-colors">Privacy Policy</span>.
-                {" "}It's free to get started.
-              </p>
             </>
           )}
         </div>

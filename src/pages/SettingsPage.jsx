@@ -1,5 +1,7 @@
 import { useAccent } from "../context/AccentContext";
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
+import { ExternalLink } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import {
   fetchSettings,
@@ -572,6 +574,37 @@ export default function SettingsPage({ onMenuOpen, user }) {
                 style={{ backgroundColor: "#2d0f0f", border: "1px solid #7f1d1d", color: "#f87171" }}>
                 Delete Account
               </button>
+            </div>
+          </Section>
+
+          {/* Legal */}
+          <Section title="Legal" sub="Review the policies that govern your use of Nudge">
+            <div className="flex items-center justify-between py-3"
+              style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+              <div>
+                <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Privacy Policy</p>
+                <p className="text-xs" style={{ color: "var(--text-faint)" }}>
+                  How we collect, use, and protect your data
+                </p>
+              </div>
+              <Link to="/privacy" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all hover:opacity-80"
+                style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-base)", color: "var(--text-primary)" }}>
+                View <ExternalLink size={14}/>
+              </Link>
+            </div>
+            <div className="flex items-center justify-between py-3">
+              <div>
+                <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>Terms and Conditions</p>
+                <p className="text-xs" style={{ color: "var(--text-faint)" }}>
+                  The rules for using the Nudge app
+                </p>
+              </div>
+              <Link to="/terms" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-all hover:opacity-80"
+                style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-base)", color: "var(--text-primary)" }}>
+                View <ExternalLink size={14}/>
+              </Link>
             </div>
           </Section>
 

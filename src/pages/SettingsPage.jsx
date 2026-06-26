@@ -12,6 +12,7 @@ import {
   clearAllTasks,
   deleteAccount,
 } from "../lib/settings";
+import { subscribeToPush, isPushSupported, getNotificationPermission } from "../lib/push";
 
 const MenuIcon     = () => (<svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>);
 const UploadIcon   = () => (<svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>);
@@ -28,6 +29,11 @@ const FOCUS_OPTIONS = [
   { label: "45m", value: 45 },
   { label: "60m", value: 60 },
 ];
+
+// These three toggles depend on a working push subscription.
+// streakAlert is a local check, celebrationSfx is unrelated to push —
+// neither needs to trigger the permission flow.
+const PUSH_NOTIF_KEYS = ["dailyReminder", "dueDateWarning", "weeklyPride"];
 
 function Toggle({ on, onChange, accent = "var(--accent)" }) {
   return (
@@ -204,6 +210,33 @@ export default function SettingsPage({ onMenuOpen, user }) {
     reader.readAsDataURL(file);
   }
 
+  // Turning on a push-dependent toggle for the first time triggers the
+  // browser permission prompt and saves the subscription. If permission
+  // is denied or push isn't supported, the toggle stays off and the
+  // person sees why. Turning a push toggle off never unsubscribes —
+  // the other push toggles may still need this device's subscription.
+  async function toggleNotif(key) {
+    const turningOn = !notifs[key];
+
+    if (turningOn && PUSH_NOTIF_KEYS.includes(key)) {
+      if (!isPushSupported()) {
+        showToast("Push notifications aren't supported in this browser", "error");
+        return;
+      }
+
+      const subscription = await subscribeToPush(user.id);
+      if (getNotificationPermission() !== "granted") {
+        const subscription = await subscribeToPush(user.id);
+        if (!subscription) {
+          showToast("Enable notifications in your browser to turn this on", "error");
+          return;
+        }
+      }
+    }
+
+    setNotifs(prev => ({ ...prev, [key]: !prev[key] }));
+  }
+
   async function handleSave() {
     if (newPass && newPass !== confirmPass) { showToast("Passwords do not match", "error"); return; }
     if (newPass && newPass.length < 6)      { showToast("Password must be at least 6 characters", "error"); return; }
@@ -303,8 +336,6 @@ export default function SettingsPage({ onMenuOpen, user }) {
       setModalLoading(false);
     }
   }
-
-  const toggleNotif = key => setNotifs(prev => ({ ...prev, [key]: !prev[key] }));
 
   const inputStyle = {
     backgroundColor: "var(--bg-input)",

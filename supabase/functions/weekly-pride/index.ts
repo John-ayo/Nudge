@@ -267,7 +267,8 @@ Deno.serve(async () => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "Nudge <pride@nudge-app.vercel.app>",
+          //from: "Nudge <pride@nudge-app.vercel.app>",
+          from: "Nudge <onboarding@resend.dev>",
           to: [user.email],
           subject: `Your week in Nudge — ${tasksCompleted} tasks done 🔥`,
           html,

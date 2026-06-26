@@ -87,3 +87,84 @@ Deno.serve(async () => {
   if (tasksError) {
     console.error("Failed to fetch tasks:", tasksError);
     return new Response(JSON.stringify({ error: "Failed to fetch tasks" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  if (!tasks || tasks.length === 0) {
+    return new Response(JSON.stringify({ skipped: "no tasks with due dates" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  // Get users who have due date warnings enabled
+  const { data: settings } = await supabase
+    .from("settings")
+    .select("user_id")
+    .eq("notification_due_date_warning", true);
+
+  const enabledUserIds = new Set((settings ?? []).map((s) => s.user_id));
+
+  let totalSent = 0;
+  let totalSkipped = 0;
+
+  for (const task of tasks) {
+    if (!enabledUserIds.has(task.user_id)) {
+      totalSkipped++;
+      continue;
+    }
+
+    const dueDate = new Date(task.due_date);
+    const minutesUntilDue = (dueDate.getTime() - now.getTime()) / 60000;
+
+    for (const window of WINDOWS) {
+      if (
+        minutesUntilDue < window.minMinutes ||
+        minutesUntilDue > window.maxMinutes
+      ) {
+        continue;
+      }
+
+      // Check if this notification was already sent for this task
+      const { data: existing } = await supabase
+        .from("notification_log")
+        .select("id")
+        .eq("task_id", task.id)
+        .eq("type", window.type)
+        .maybeSingle();
+
+      if (existing) {
+        totalSkipped++;
+        continue;
+      }
+
+      const payload = JSON.stringify({
+        title: `Task due in ${window.label}`,
+        body: task.title,
+        url: "/tasks",
+        tag: `nudge-due-${window.type}-${task.id}`,
+      });
+
+      const { sent } = await sendPush(supabase, task.user_id, payload);
+
+      if (sent > 0) {
+        await supabase.from("notification_log").insert({
+          user_id: task.user_id,
+          task_id: task.id,
+          type: window.type,
+        });
+        totalSent++;
+      }
+    }
+  }
+
+  return new Response(
+    JSON.stringify({ sent: totalSent, skipped: totalSkipped }),
+    {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+});

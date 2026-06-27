@@ -22,10 +22,8 @@ self.addEventListener("push", (event) => {
   const title = data.title || "Nudge";
   const options = {
     body: data.body || "",
-    // icon/badge intentionally omitted until PWA icons exist.
-    // Once you have them in public/, add back:
-    // icon: data.icon || "/icon-192.png",
-    // badge: data.badge || "/icon-96.png",
+    icon: data.icon || "/nudge-icon-193.png",
+    //badge: data.badge || "/nudge-icon-193.png",
     tag: data.tag || "nudge-general",
     data: {
       url: data.url || "/dashboard",

@@ -49,21 +49,22 @@ export async function updatePassword(newPassword) {
 export async function exportTasksCSV(userId) {
   const { data: tasks, error } = await supabase
     .from("tasks")
-    .select("title, description, status, priority, due_date, created_at")
+    .select("title, priority, done, due_date, est, created_at, updated_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
   if (!tasks || tasks.length === 0) return null;
 
-  const headers = ["Title", "Description", "Status", "Priority", "Due Date", "Created At"];
+  const headers = ["Title", "Priority", "Done", "Due Date", "Est. Minutes", "Created At", "Updated At"];
   const rows = tasks.map(t => [
-    `"${(t.title       ?? "").replace(/"/g, '""')}"`,
-    `"${(t.description ?? "").replace(/"/g, '""')}"`,
-    t.status     ?? "",
+    `"${(t.title ?? "").replace(/"/g, '""')}"`,
     t.priority   ?? "",
+    t.done       ? "Yes" : "No",
     t.due_date   ?? "",
+    t.est        ?? "",
     t.created_at ?? "",
+    t.updated_at ?? "",
   ]);
 
   const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");

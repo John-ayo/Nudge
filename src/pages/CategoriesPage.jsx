@@ -6,6 +6,7 @@ import {
   Cookie, Pizza, Wrench, Dumbbell,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useAccent } from "../context/AccentContext";
 import {
   fetchCategories,
   createCategory,
@@ -57,11 +58,11 @@ function deriveStatus(total, done) {
   return "In progress";
 }
 
-function statusStyle(s) {
-  if (s === "Complete")     return { bg: "#052e16",           color: "#4ade80" };
-  if (s === "Just started") return { bg: "#1c1407",           color: "#fbbf24" };
+function statusStyle(s, theme) {
+  if (s === "Complete")     return { bg: theme === "dark" ? "#052e16" : "#dcfce7", color: theme === "dark" ? "#4ade80" : "#15803d" };
+  if (s === "Just started") return { bg: theme === "dark" ? "#1c1407" : "#fef9c3", color: theme === "dark" ? "#fbbf24" : "#92400e" };
   if (s === "No tasks")     return { bg: "var(--bg-card)",    color: "var(--text-faint)" };
-  return                           { bg: "#2d0f0f",           color: "#f87171" };
+  return                           { bg: theme === "dark" ? "#2d0f0f" : "#fee2e2", color: theme === "dark" ? "#f87171" : "#b91c1c" };
 }
 
 function CategoryModal({ cat, onClose, onSave, saving }) {
@@ -173,12 +174,12 @@ function CategoryModal({ cat, onClose, onSave, saving }) {
   );
 }
 
-function CategoryCard({ cat, onEdit, onDelete }) {
+function CategoryCard({ cat, onEdit, onDelete, theme }) {
   const total   = cat._total ?? 0;
   const done    = cat._done  ?? 0;
   const pct     = total > 0 ? Math.round((done / total) * 100) : 0;
   const status  = deriveStatus(total, done);
-  const st      = statusStyle(status);
+  const st      = statusStyle(status, theme);
   const CatIcon = ALL_ICONS[cat.icon] || BookOpen;
 
   return (
@@ -237,6 +238,7 @@ function CategoryCard({ cat, onEdit, onDelete }) {
 
 export default function CategoriesPage({ onMenuOpen }) {
   const { user } = useAuth();
+  const { theme } = useAccent();
 
   const [cats,       setCats]       = useState([]);
   const [tasks,      setTasks]      = useState([]);
@@ -268,11 +270,27 @@ export default function CategoriesPage({ onMenuOpen }) {
   const overallPct = totalTasks > 0 ? Math.round((totalDone / totalTasks) * 100) : 0;
 
   const PILLS = [
-    { label: `${cats.length} Categories`, bg: "#1e1b4b",          color: "#a78bfa"             },
-    { label: `${totalTasks} Total Tasks`,  bg: "var(--bg-card)",   color: "var(--text-primary)" },
-    { label: `${totalDone} Completed`,     bg: "#052e16",          color: "#4ade80"             },
-    { label: `${overallPct}% Done`,        bg: "#1c1407",          color: "#fbbf24"             },
-  ];
+   {
+      label: `${cats.length} Categories`,
+      bg:    theme === "dark" ? "#1e1b4b" : "#ede9fe",
+      color: theme === "dark" ? "#a78bfa" : "#6d28d9",
+   },
+   {
+      label: `${totalTasks} Total Tasks`,
+      bg:    theme === "dark" ? "var(--bg-card)" : "var(--bg-card)",
+      color: "var(--text-primary)",
+   },
+   {
+      label: `${totalDone} Completed`,
+      bg:    theme === "dark" ? "#052e16" : "#dcfce7",
+      color: theme === "dark" ? "#4ade80" : "#15803d",
+   },
+   {
+      label: `${overallPct}% Done`,
+      bg:    theme === "dark" ? "#1c1407" : "#fef9c3",
+      color: theme === "dark" ? "#fbbf24" : "#92400e",
+   },
+ ];
 
   const handleAdd = async (data) => {
     setSaving(true);
@@ -375,7 +393,7 @@ export default function CategoriesPage({ onMenuOpen }) {
             {/* Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {enrichedCats.map(cat => (
-                <CategoryCard key={cat.id} cat={cat} onEdit={setEditingCat} onDelete={handleDelete}/>
+                <CategoryCard key={cat.id} cat={cat} onEdit={setEditingCat} onDelete={handleDelete} theme={theme}/>
               ))}
 
               {/* Add new card */}

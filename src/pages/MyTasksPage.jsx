@@ -263,10 +263,26 @@ export default function MyTasksPage({ onMenuOpen }) {
   const handleDelete = async (id)   => { try { await removeTask(id); } catch (err) { setError(err.message); } };
 
   const PILLS = [
-    { label: `${pending.length} Pending`,        bg: "#1a1225", color: "#a78bfa" },
-    { label: `${highPrio.length} High Priority`, bg: "#2d0f0f", color: "#f87171" },
-    { label: `${completed.length} Completed`,    bg: "#052e16", color: "#4ade80" },
-    { label: `${dueToday.length} Due Today`,     bg: "#1c1407", color: "#fbbf24" },
+   {
+      label: `${pending.length} Pending`,
+      bg:    theme === "dark" ? "#1a1225" : "#ede9fe",
+      color: theme === "dark" ? "#a78bfa" : "#6d28d9",
+   },
+   {
+      label: `${highPrio.length} High Priority`,
+      bg:    theme === "dark" ? "#2d0f0f" : "#fee2e2",
+      color: theme === "dark" ? "#f87171" : "#b91c1c",
+   },
+   {
+      label: `${completed.length} Completed`,
+      bg:    theme === "dark" ? "#052e16" : "#dcfce7",
+      color: theme === "dark" ? "#4ade80" : "#15803d",
+   },
+   {
+      label: `${dueToday.length} Due Today`,
+      bg:    theme === "dark" ? "#1c1407" : "#fef9c3",
+      color: theme === "dark" ? "#fbbf24" : "#92400e",
+   },
   ];
 
   return (

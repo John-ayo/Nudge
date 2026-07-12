@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
-import InstallPrompt from "./components/InstallPrompt";
 import { useAuth } from "./context/AuthContext";
 import { useTasks } from "./context/TasksContext";
+import InstallPrompt from "./components/InstallPrompt";
 import ErrorBoundary from "./components/ErrorBoundary";
 import BadgeModal from "./components/BadgeModal";
 
@@ -85,7 +85,7 @@ function AppShell() {
 
       {/* Badge unlock modal — fires after celebration modal */}
       {pendingBadges[0] && (
-        <BadgeModal badgeKey={pendingBadges[0]} onDismiss={dismissBadge} />
+        <BadgeModal key={pendingBadges[0]} badgeKey={pendingBadges[0]} onDismiss={dismissBadge} />
       )}
 
     </div>

@@ -33,7 +33,7 @@ export default function InstallPrompt() {
         border: "1px solid var(--accent)",
       }}>
       <div className="flex items-center gap-3">
-        <img src="/nudge-icon-192.png" alt="Nudge" className="w-10 h-10 rounded-xl"/>
+        <img src="/nudge-icon-512.png" alt="Nudge" className="w-10 h-10 rounded-xl"/>
         <div>
           <p className="text-sm font-bold" style={{ color: "var(--text-primary)", fontFamily: "'Syne',sans-serif" }}>
             Install Nudge

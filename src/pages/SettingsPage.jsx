@@ -589,7 +589,11 @@ export default function SettingsPage({ onMenuOpen, user }) {
               </div>
               <button onClick={() => setModal({ type: "clearTasks" })}
                 className="rounded-xl px-3 py-2 text-sm font-medium transition-all hover:opacity-80"
-                style={{ backgroundColor: "#2d0f0f", border: "1px solid #7f1d1d", color: "#f87171" }}>
+                style={{
+                  backgroundColor: theme === "dark" ? "#2d0f0f" : "#fee2e2",
+                  border: `1px solid ${theme === "dark" ? "#7f1d1d" : "#fca5a5"}`,
+                  color: theme === "dark" ? "#f87171" : "#b91c1c",
+                }}>
                 Clear Tasks
               </button>
             </div>
@@ -602,7 +606,11 @@ export default function SettingsPage({ onMenuOpen, user }) {
               </div>
               <button onClick={() => setModal({ type: "deleteAccount" })}
                 className="rounded-xl px-3 py-2 text-sm font-medium transition-all hover:opacity-80"
-                style={{ backgroundColor: "#2d0f0f", border: "1px solid #7f1d1d", color: "#f87171" }}>
+                style={{
+                  backgroundColor: theme === "dark" ? "#2d0f0f" : "#fee2e2",
+                  border: `1px solid ${theme === "dark" ? "#7f1d1d" : "#fca5a5"}`,
+                  color: theme === "dark" ? "#f87171" : "#b91c1c",
+                }}>
                 Delete Account
               </button>
             </div>

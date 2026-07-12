@@ -31,7 +31,7 @@ export async function createTask(userId, task) {
 export async function updateTask(taskId, updates) {
   const { data, error } = await supabase
     .from('tasks')
-    .update(updates)
+    .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', taskId)
     .select()
     .single()

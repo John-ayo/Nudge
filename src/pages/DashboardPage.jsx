@@ -349,7 +349,7 @@ export default function DashboardPage({ onMenuOpen }) {
             <div className="flex gap-1.5 mt-3">
               {streakDots.map((active, i) => (
                 <div key={i} className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: active ? "#431407" : "var(--bg-hover)" }}>
+                  style={{ backgroundColor: active ? (theme === "dark" ? "#431407" : "#ffedd5") : "var(--bg-hover)" }}>
                   {active && <Flame size={16} color="#F97316"/>}
                 </div>
               ))}
@@ -368,8 +368,8 @@ export default function DashboardPage({ onMenuOpen }) {
             </p>
             <div className="flex flex-wrap gap-2">
               {[
-                { label: "Active",      Icon: Zap,    bg: "#1e1b4b", color: "#a78bfa" },
-                { label: "On fire",     Icon: Trophy, bg: "#431407", color: "#fb923c" },
+                { label: "Active",      Icon: Zap,    bg: theme === "dark" ? "#1e1b4b" : "#ede9fe", color: theme === "dark" ? "#a78bfa" : "#6d28d9" },
+                { label: "On fire",     Icon: Trophy, bg: theme === "dark" ? "#431407" : "#ffedd5", color: theme === "dark" ? "#fb923c" : "#c2410c" },
                 { label: "Crushing it", Icon: Rocket, bg: "var(--bg-hover)", color: "var(--text-muted)" },
               ].map(b => (
                 <span key={b.label} className="rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1"

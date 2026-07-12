@@ -9,6 +9,7 @@ import { supabase } from "../lib/supabase";
 import { BADGE_LIST } from "../lib/badges";
 import BadgeIcon from "../components/BadgeIcon";
 import { useTasks } from "../context/TasksContext";
+import { useAccent } from "../context/AccentContext";
 
 function getLevel(totalXP)         { return Math.floor(totalXP / 500) + 1; }
 function getLevelProgress(totalXP) {
@@ -20,6 +21,7 @@ export default function ProfilePage({ onMenuOpen }) {
   const { user }   = useAuth();
   const navigate   = useNavigate();
   const { badges } = useTasks();
+  const { theme } = useAccent();
 
   const [totalXP,   setTotalXP]   = useState(0);
   const [streak,    setStreak]    = useState({ current: 0, best: 0 });
@@ -94,7 +96,7 @@ export default function ProfilePage({ onMenuOpen }) {
   const maxTasks      = Math.max(...prideData.map(d => d.tasks), 1);
   const focusSessions = xpLog.filter(x => x.reason?.toLowerCase().includes("focus")).length;
   const avgPerDay     = prideData.length > 0
-    ? (prideData.reduce((s, d) => s + d.tasks, 0) / 30).toFixed(1)
+    ? (prideData.reduce((s, d) => s + d.tasks, 0) / 30).toFixed(0)
     : "0";
   const earnedKeys  = new Set((badges || []).map(b => b.badge_id));
   const earnedCount = (badges || []).length || 0;
@@ -234,9 +236,11 @@ export default function ProfilePage({ onMenuOpen }) {
                   <div key={d.day} className="flex-1 flex items-end">
                     <div className="w-full rounded-t-sm transition-all hover:opacity-80"
                       style={{
-                        height: `${Math.max((d.tasks / maxTasks) * 100, 4)}%`,
-                        backgroundColor: d.tasks > 6 ? "var(--accent)" : d.tasks > 3 ? "var(--accent)88" : "var(--bg-subtle)",
-                        minHeight: "4px",
+                        height: `${Math.max((d.tasks / maxTasks) * 100, 8)}%`,
+                        backgroundColor: d.tasks > 0 
+                          ? (d.tasks > 6 ? "var(--accent)" : d.tasks > 3 ? "var(--accent)cc" : "var(--accent)66") 
+                          : "var(--bg-subtle)",
+                        minHeight: "25px",
                       }}
                       title={`${d.date.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}: ${d.tasks} tasks`}
                     />
@@ -290,8 +294,12 @@ export default function ProfilePage({ onMenuOpen }) {
                     <div key={badge.key}
                       className="flex flex-col items-center text-center p-3 sm:p-4 rounded-2xl transition-all"
                       style={{
-                        backgroundColor: unlocked ? "#0e0c1f"              : "var(--bg-input)",
-                        border:          unlocked ? "1px solid rgba(108,99,255,0.25)" : "1px solid var(--border-subtle)",
+                        backgroundColor: unlocked
+                          ? (theme === "dark" ? "#0e0c1f" : "#ede9fe")
+                          : "var(--bg-input)",
+                        border: unlocked
+                          ? (theme === "dark" ? "1px solid rgba(108,99,255,0.25)" : "1px solid rgba(108,99,255,0.4)")
+                          : "1px solid var(--border-subtle)",
                       }}>
                       <BadgeIcon badgeKey={badge.key} unlocked={unlocked} size={64}/>
                       <p className="text-sm font-bold mt-3 mb-0.5"
@@ -303,7 +311,11 @@ export default function ProfilePage({ onMenuOpen }) {
                       </p>
                       {!unlocked && (
                         <span className="mt-2 text-xs font-semibold rounded-full px-2.5 py-0.5"
-                          style={{ backgroundColor: "var(--bg-card)", color: "var(--text-disabled)", border: "1px solid var(--border-base)" }}>
+                          style={{ 
+                            backgroundColor: theme === "dark" ? "var(--bg-card)" : "#f1f5f9",
+                            color: "var(--text-disabled)",
+                            border: "1px solid var(--border-base)", 
+                          }}>
                           Locked
                         </span>
                       )}

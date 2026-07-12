@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+import InstallPrompt from "./components/InstallPrompt";
 import { useAuth } from "./context/AuthContext";
 import { useTasks } from "./context/TasksContext";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -79,6 +80,7 @@ function AppShell() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
+        <InstallPrompt />
       </div>
 
       {/* Badge unlock modal — fires after celebration modal */}

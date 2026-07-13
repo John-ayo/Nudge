@@ -3,7 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import posthog from "posthog-js";
-import { setupGlobalErrorHandling } from "./lib/errorHandler.js";
+import { setupGlobalErrorHandling } from "./Lib/errorHandler.js";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { TasksProvider } from "./context/TasksContext.jsx";
 import { AccentProvider } from "./context/AccentContext.jsx";

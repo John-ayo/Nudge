@@ -5,10 +5,23 @@ export async function signUp(email, password, name) {
     email,
     password,
     options: {
-      data: { name }
+      data: { full_name: name }
     }
   })
   if (error) throw error
+
+  // Fire welcome email in the background, don't block signup
+  if (data?.user) {
+    supabase.functions.invoke('welcome-email', {
+      body: {
+        record: {
+          email: data.user.email,
+          raw_user_meta_data: { full_name: name }
+        }
+      }
+    }).catch(err => console.error('Welcome email failed:', err))
+  }
+
   return data
 }
 

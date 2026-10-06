@@ -4,7 +4,7 @@ import ScrollReveal from "../components/ScrollReveal";
 
 import "../tailwind-customs.css";
 
-// ── Palette ───────────────────────────────────────────────────
+// Palette
 const C = {
   black: "#000000",
   surface: "#0D0D0D",
@@ -23,7 +23,7 @@ const C = {
   greyLight: "#888888",
 };
 
-// ── Confetti piece ────────────────────────────────────────────
+// Confetti piece
 function ConfettiPiece({ x, color, delay }) {
   return (
     <div
@@ -37,9 +37,7 @@ function ConfettiPiece({ x, color, delay }) {
   );
 }
 
-// EOF newline
-
-// ── Interactive Hero Task Card ────────────────────────────────
+// Interactive Hero Task Card
 function generateConfetti() {
   return Array.from({ length: 20 }, (_, i) => ({
     id: i,
@@ -208,7 +206,7 @@ function HeroTaskCard() {
   );
 }
 
-// ── Main Landing Page ─────────────────────────────────────────
+// Main Landing Page
 export default function LandingPage({ onLogin, onSignup }) {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
@@ -235,7 +233,7 @@ export default function LandingPage({ onLogin, onSignup }) {
     {
       icon: "🎉",
       title: "Celebrate Every Win",
-      desc: "Confetti, XP, praise — every completed task is a moment worth celebrating.",
+      desc: "Confetti, XP, praise, every completed task is a moment worth celebrating.",
       accent: C.gold,
     },
     {
@@ -330,7 +328,7 @@ export default function LandingPage({ onLogin, onSignup }) {
       />
 
       <div className="min-h-screen overflow-y-auto bg-black relative">
-        {/* ── Navbar ── */}
+        {/* Navbar */}
         <nav className={`nav-wrap${scrolled ? " scrolled" : ""}`}>
           <div className="nav-inner">
             <div className="syne text-2xl font-black text-white">
@@ -401,7 +399,7 @@ export default function LandingPage({ onLogin, onSignup }) {
           )}
         </nav>
 
-        {/* ── Hero ── */}
+        {/* Hero */}
         <section className="hero-section">
           <div className="hero-inner">
             <div className="hero-text" style={{ animation: 'none' }}>
@@ -424,7 +422,7 @@ export default function LandingPage({ onLogin, onSignup }) {
                 style={{ color: C.greyLight }}
               >
                 Whether you are a student, a builder, a creative, or a
-                professional — Nudge rewards every win, no matter how small.
+                professional, Nudge rewards every win, no matter how small.
               </p>
 
               <div className="hero-ctas">
@@ -434,7 +432,6 @@ export default function LandingPage({ onLogin, onSignup }) {
                 >
                   Get Started Free
                 </button>
-                <button className="btn-ghost">Watch Demo ▶</button>
               </div>
 
               <div className="hero-stats">
@@ -467,7 +464,7 @@ export default function LandingPage({ onLogin, onSignup }) {
           </div>
         </section>
 
-        {/* ── Ticker ── */}
+        {/* Ticker */}
         <div
           className="overflow-hidden border-t border-b border-grey py-3 bg-surface"
           style={{
@@ -494,7 +491,7 @@ export default function LandingPage({ onLogin, onSignup }) {
           </div>
         </div>
 
-        {/* ── Features ── */}
+        {/* Features */}
         <section className="section">
           <div className="section-inner">
             <ScrollReveal>
@@ -518,11 +515,11 @@ export default function LandingPage({ onLogin, onSignup }) {
               {FEATURES.map((f, i) => (
                <ScrollReveal key={i} delay={i * 100}>
                 <div
-                  className="feature-card"
+                  className="feature-card h-full flex flex-col"
                   style={{ animation: 'none', opacity: 1 }}
                 >
                   <div
-                    className="w-11 h-11 rounded-2.75 flex items-center justify-center mb-4 text-2xl"
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4 text-2xl shrink-0"
                     style={{
                       background: `${f.accent}18`,
                       border: `1px solid ${f.accent}30`,
@@ -546,7 +543,7 @@ export default function LandingPage({ onLogin, onSignup }) {
           </div>
         </section>
 
-        {/* ── How It Works ── */}
+        {/* How It Works */}
         <section className="section pt-0">
           <div className="section-inner">
             <ScrollReveal>
@@ -564,7 +561,7 @@ export default function LandingPage({ onLogin, onSignup }) {
               {HOW_STEPS.map((step, i) => (
                <ScrollReveal key={i} delay={i * 100}>
                 <div
-                  className="how-card"
+                  className="how-card h-full flex flex-col"
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = step.color;
                   }}
@@ -589,7 +586,7 @@ export default function LandingPage({ onLogin, onSignup }) {
                     {step.title}
                   </div>
                   <div
-                    className="text-sm leading-relaxed"
+                    className="text-sm leading-relaxed mt-auto"
                     style={{ color: C.greyLight }}
                   >
                     {step.desc}
@@ -601,7 +598,7 @@ export default function LandingPage({ onLogin, onSignup }) {
           </div>
         </section>
 
-        {/* ── Quote ── */}
+        {/* Quote */}
         <section className="section pt-0">
           <div className="section-inner">
             <ScrollReveal>
@@ -638,7 +635,7 @@ export default function LandingPage({ onLogin, onSignup }) {
           </div>
         </section>
 
-        {/* ── Final CTA ── */}
+        {/* Final CTA */}
         <section className="section pt-0 pb-24 lg:pb-32">
           <div className="section-inner">
             <ScrollReveal>
@@ -676,7 +673,7 @@ export default function LandingPage({ onLogin, onSignup }) {
           </div>
         </section>
 
-        {/* ── Footer ── */}
+        {/* Footer */}
         <footer className="footer">
           <div className="footer-inner">
             <div className="syne text-xl font-black text-white">

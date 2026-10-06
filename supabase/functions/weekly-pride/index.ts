@@ -1,14 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import webPush from "npm:web-push@3.6.7";
+import { sendPushToUser } from "../_shared/push.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY")!;
-const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY")!;
-const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:johnpaulthedev@gmail.com";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-
-webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
 const BADGE_LABELS: Record<string, string> = {
   first_blood: "First Blood",
@@ -164,30 +159,7 @@ function buildEmailHtml(params: {
 </html>`;
 }
 
-async function sendPush(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-  payload: string
-) {
-  const { data: subscriptions } = await supabase
-    .from("push_subscriptions")
-    .select("endpoint, p256dh, auth")
-    .eq("user_id", userId);
-
-  if (!subscriptions || subscriptions.length === 0) return;
-
-  await Promise.allSettled(
-    subscriptions.map((sub) =>
-      webPush.sendNotification(
-        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        payload
-      )
-    )
-  );
-}
-
 Deno.serve(async () => {
-
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -283,7 +255,7 @@ Deno.serve(async () => {
       }
 
       // Send push notification too
-      await sendPush(
+      await sendPushToUser(
         supabase,
         userId,
         JSON.stringify({
@@ -305,4 +277,4 @@ Deno.serve(async () => {
     JSON.stringify({ emailsSent, failed }),
     { status: 200, headers: { "Content-Type": "application/json" } }
   );
-};
+});

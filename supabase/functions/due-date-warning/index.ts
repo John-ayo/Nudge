@@ -1,88 +1,30 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import webPush from "npm:web-push@3.6.7";
+import { sendPushToUser } from "../_shared/push.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY")!;
-const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY")!;
-const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:johnpaulthedev@gmail.com";
 
-webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-
+// ttl is how long the push service holds the message if the device is offline.
+// A "20 minutes left" alert that arrives an hour late is noise, so keep it short.
 const WINDOWS = [
-  {
-    type: "due_24h",
-    label: "24 hours",
-    minMinutes: 23 * 60 + 30, // 23.5 hours
-    maxMinutes: 24 * 60 + 30, // 24.5 hours
-  },
-  {
-    type: "due_1h",
-    label: "1 hour",
-    minMinutes: 50,
-    maxMinutes: 70,
-  },
-  {
-    type: "due_20m",
-    label: "20 minutes",
-    minMinutes: 15,
-    maxMinutes: 25,
-  },
+  { type: "due_24h", label: "24 hours", minMinutes: 23 * 60 + 30, maxMinutes: 24 * 60 + 30, ttl: 3 * 60 * 60 },
+  { type: "due_1h", label: "1 hour", minMinutes: 50, maxMinutes: 70, ttl: 30 * 60 },
+  { type: "due_20m", label: "20 minutes", minMinutes: 15, maxMinutes: 25, ttl: 10 * 60 },
 ];
 
-async function sendPush(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-  payload: string
-) {
-  const { data: subscriptions } = await supabase
-    .from("push_subscriptions")
-    .select("endpoint, p256dh, auth")
-    .eq("user_id", userId);
-
-  if (!subscriptions || subscriptions.length === 0) return { sent: 0 };
-
-  const results = await Promise.allSettled(
-    subscriptions.map((sub) =>
-      webPush.sendNotification(
-        {
-          endpoint: sub.endpoint,
-          keys: { p256dh: sub.p256dh, auth: sub.auth },
-        },
-        payload
-      )
-    )
-  );
-
-  // Clean up expired subscriptions
-  results.forEach((result, i) => {
-    if (result.status === "rejected") {
-      const reason = result.reason?.toString() ?? "";
-      if (reason.includes("410") || reason.includes("404")) {
-        supabase
-          .from("push_subscriptions")
-          .delete()
-          .eq("endpoint", subscriptions[i].endpoint)
-          .then(() => console.log("Cleaned expired subscription"));
-      }
-    }
-  });
-
-  return {
-    sent: results.filter((r) => r.status === "fulfilled").length,
-  };
-}
+const LOOKAHEAD_MS = 25 * 60 * 60 * 1000; // a bit past the largest window
 
 Deno.serve(async () => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const now = new Date();
 
-  // Fetch all incomplete tasks with a due date
+  // Only fetch tasks that could fall inside a window, not every task ever created
   const { data: tasks, error: tasksError } = await supabase
     .from("tasks")
     .select("id, user_id, title, due_date")
     .eq("done", false)
-    .not("due_date", "is", null);
+    .gte("due_date", now.toISOString())
+    .lte("due_date", new Date(now.getTime() + LOOKAHEAD_MS).toISOString());
 
   if (tasksError) {
     console.error("Failed to fetch tasks:", tasksError);
@@ -93,13 +35,12 @@ Deno.serve(async () => {
   }
 
   if (!tasks || tasks.length === 0) {
-    return new Response(JSON.stringify({ skipped: "no tasks with due dates" }), {
+    return new Response(JSON.stringify({ skipped: "no tasks in range" }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  // Get users who have due date warnings enabled
   const { data: settings } = await supabase
     .from("settings")
     .select("user_id")
@@ -116,18 +57,14 @@ Deno.serve(async () => {
       continue;
     }
 
-    const dueDate = new Date(task.due_date);
-    const minutesUntilDue = (dueDate.getTime() - now.getTime()) / 60000;
+    const minutesUntilDue =
+      (new Date(task.due_date).getTime() - now.getTime()) / 60000;
 
     for (const window of WINDOWS) {
-      if (
-        minutesUntilDue < window.minMinutes ||
-        minutesUntilDue > window.maxMinutes
-      ) {
+      if (minutesUntilDue < window.minMinutes || minutesUntilDue > window.maxMinutes) {
         continue;
       }
 
-      // Check if this notification was already sent for this task
       const { data: existing } = await supabase
         .from("notification_log")
         .select("id")
@@ -147,7 +84,10 @@ Deno.serve(async () => {
         tag: `nudge-due-${window.type}-${task.id}`,
       });
 
-      const { sent } = await sendPush(supabase, task.user_id, payload);
+      const { sent } = await sendPushToUser(supabase, task.user_id, payload, {
+        ttl: window.ttl,
+        urgency: "high",
+      });
 
       if (sent > 0) {
         await supabase.from("notification_log").insert({
@@ -160,11 +100,8 @@ Deno.serve(async () => {
     }
   }
 
-  return new Response(
-    JSON.stringify({ sent: totalSent, skipped: totalSkipped }),
-    {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    }
-  );
+  return new Response(JSON.stringify({ sent: totalSent, skipped: totalSkipped }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 });

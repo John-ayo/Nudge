@@ -22,7 +22,8 @@ self.addEventListener("push", (event) => {
   const title = data.title || "Nudge";
   const options = {
     body: data.body || "",
-    icon: data.icon || "/nudge-icon-193.png",
+    icon: data.icon || "/nudge-icon-original-192.png",
+    requireInteraction: true,
     //badge: data.badge || "/nudge-icon-193.png",
     tag: data.tag || "nudge-general",
     data: {

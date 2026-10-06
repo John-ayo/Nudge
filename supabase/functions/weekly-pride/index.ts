@@ -137,7 +137,7 @@ function buildEmailHtml(params: {
           <!-- CTA -->
           <tr>
             <td style="padding:0 40px 40px;text-align:center;">
-              <a href="https://nudge-app.vercel.app/dashboard"
+              <a href="https://nudge.com.ng/dashboard"
                 style="display:inline-block;background:#6C63FF;color:#fff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 32px;border-radius:10px;">
                 Open Nudge
               </a>
@@ -187,6 +187,7 @@ async function sendPush(
 }
 
 Deno.serve(async () => {
+
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -267,10 +268,9 @@ Deno.serve(async () => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          //from: "Nudge <pride@nudge-app.vercel.app>",
-          from: "Nudge <onboarding@resend.dev>",
+          from: "Nudge <pride@nudge.com.ng>",
           to: [user.email],
-          subject: `Your week in Nudge — ${tasksCompleted} tasks done 🔥`,
+          subject: `Your week in Nudge: ${tasksCompleted} tasks done 🔥`,
           html,
         }),
       });
@@ -305,4 +305,4 @@ Deno.serve(async () => {
     JSON.stringify({ emailsSent, failed }),
     { status: 200, headers: { "Content-Type": "application/json" } }
   );
-});
+};

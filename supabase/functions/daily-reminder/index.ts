@@ -1,45 +1,50 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import webPush from "npm:web-push@3.6.7";
+import { sendPushToUser } from "../_shared/push.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY")!;
-const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY")!;
-const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:johnpaulthedev@gmail.com";
 
-webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+const DEFAULT_TZ = "Africa/Lagos";
+// If a cron tick is late or missed, still send within this many minutes
+// after the user's reminder time, but never hours later.
+const CATCH_UP_MINUTES = 60;
 
-function getCurrentTimeInTz(timezone: string): string {
+function resolveTz(tz: string | null): string {
+  const candidate = tz || DEFAULT_TZ;
   try {
-    const formatter = new Intl.DateTimeFormat("en-GB", {
-      timeZone: timezone,
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-    const parts = formatter.formatToParts(new Date());
-    const hour = parts.find((p) => p.type === "hour")?.value ?? "00";
-    const minute = parts.find((p) => p.type === "minute")?.value ?? "00";
-    return `${hour}:${minute}`;
+    new Intl.DateTimeFormat("en-GB", { timeZone: candidate });
+    return candidate;
   } catch {
-    return "00:00";
+    return DEFAULT_TZ;
   }
 }
 
-function getTodayKey(timezone: string): string {
-  try {
-    return new Intl.DateTimeFormat("en-CA", {
-      timeZone: timezone,
-    }).format(new Date());
-  } catch {
-    return new Date().toISOString().slice(0, 10);
-  }
+function minutesNowInTz(tz: string): number {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: tz,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0) % 24;
+  const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
+  return hour * 60 + minute;
+}
+
+// Accepts "08:00" or "08:00:00" (Postgres time columns return the latter)
+function reminderToMinutes(value: string | null): number {
+  const [h, m] = (value || "08:00").split(":");
+  const total = Number(h) * 60 + Number(m);
+  return Number.isNaN(total) ? 8 * 60 : total;
+}
+
+function todayKey(tz: string): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
 }
 
 Deno.serve(async () => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-  // Get all users with daily reminder enabled
   const { data: settings, error: settingsError } = await supabase
     .from("settings")
     .select("user_id, reminder_time, timezone")
@@ -60,31 +65,19 @@ Deno.serve(async () => {
     });
   }
 
-  // Filter users where current time in their timezone matches their reminder_time
-  const qualifying = settings.filter((s) => {
-    const tz = s.timezone || "Africa/Lagos";
-    const reminderTime = s.reminder_time || "08:00";
-    const currentTime = getCurrentTimeInTz(tz);
-    return currentTime === reminderTime;
-  });
-
-  if (qualifying.length === 0) {
-    return new Response(JSON.stringify({ skipped: "no users at reminder time" }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
   let sent = 0;
   let skipped = 0;
   let failed = 0;
 
-  for (const s of qualifying) {
-    const tz = s.timezone || "Africa/Lagos";
-    const todayKey = getTodayKey(tz);
-    const logType = `daily_reminder_${todayKey}`;
+  for (const s of settings) {
+    const tz = resolveTz(s.timezone);
+    // Minutes since the reminder time, wrapping around midnight
+    const elapsed =
+      (minutesNowInTz(tz) - reminderToMinutes(s.reminder_time) + 1440) % 1440;
+    if (elapsed >= CATCH_UP_MINUTES) continue;
 
-    // Check if we already sent this user a daily reminder today
+    const logType = `daily_reminder_${todayKey(tz)}`;
+
     const { data: existing } = await supabase
       .from("notification_log")
       .select("id")
@@ -97,17 +90,6 @@ Deno.serve(async () => {
       continue;
     }
 
-    // Get user's push subscriptions
-    const { data: subscriptions } = await supabase
-      .from("push_subscriptions")
-      .select("endpoint, p256dh, auth")
-      .eq("user_id", s.user_id);
-
-    if (!subscriptions || subscriptions.length === 0) {
-      skipped++;
-      continue;
-    }
-
     const payload = JSON.stringify({
       title: "Good morning 👋",
       body: "Your tasks are waiting. Let's get something done today.",
@@ -115,41 +97,21 @@ Deno.serve(async () => {
       tag: "nudge-daily-reminder",
     });
 
-    const results = await Promise.allSettled(
-      subscriptions.map((sub) =>
-        webPush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          payload
-        )
-      )
-    );
+    const result = await sendPushToUser(supabase, s.user_id, payload, {
+      ttl: 3 * 60 * 60,
+      urgency: "normal",
+    });
 
-    const anySucceeded = results.some((r) => r.status === "fulfilled");
-
-    if (anySucceeded) {
-      // Log so we don't send again today
-      await supabase.from("notification_log").insert({
-        user_id: s.user_id,
-        type: logType,
-      });
+    if (result.subscriptions === 0) {
+      skipped++;
+    } else if (result.sent > 0) {
+      await supabase
+        .from("notification_log")
+        .insert({ user_id: s.user_id, type: logType });
       sent++;
     } else {
       failed++;
     }
-
-    // Clean up expired subscriptions
-    results.forEach((result, i) => {
-      if (result.status === "rejected") {
-        const reason = result.reason?.toString() ?? "";
-        if (reason.includes("410") || reason.includes("404")) {
-          supabase
-            .from("push_subscriptions")
-            .delete()
-            .eq("endpoint", subscriptions[i].endpoint)
-            .then(() => console.log("Cleaned expired subscription"));
-        }
-      }
-    });
   }
 
   return new Response(JSON.stringify({ sent, skipped, failed }), {

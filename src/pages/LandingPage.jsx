@@ -23,6 +23,12 @@ const C = {
   greyLight: "#888888",
 };
 
+// Only link to things that exist on this page
+const NAV_LINKS = [
+  ["Features", "#features"],
+  ["How it works", "#how-it-works"],
+];
+
 // Confetti piece
 function ConfettiPiece({ x, color, delay }) {
   return (
@@ -335,9 +341,9 @@ export default function LandingPage({ onLogin, onSignup }) {
               Nudge<span className="text-purple">.</span>
             </div>
             <div className="nav-links">
-              {["Features", "How it works", "About"].map((l) => (
-                <a key={l} className="nav-link" href="#">
-                  {l}
+              {NAV_LINKS.map(([label, href]) => (
+                <a key={label} className="nav-link" href={href}>
+                  {label}
                 </a>
               ))}
             </div>
@@ -367,14 +373,14 @@ export default function LandingPage({ onLogin, onSignup }) {
           </div>
           {menuOpen && (
             <div className="mobile-menu animate-fadeUp" style={{ transformOrigin: "top" }}>
-              {["Features", "How it works", "About"].map((l) => (
+              {NAV_LINKS.map(([label, href]) => (
                 <a
-                  key={l}
+                  key={label}
                   className="nav-link"
-                  href="#"
+                  href={href}
                   onClick={() => setMenuOpen(false)}
                 >
-                  {l}
+                  {label}
                 </a>
               ))}
               <button
@@ -436,8 +442,8 @@ export default function LandingPage({ onLogin, onSignup }) {
 
               <div className="hero-stats">
                 {[
-                  ["3x", "More tasks done", C.purple],
-                  ["92%", "Feel motivated", C.gold],
+                  ["7", "Badges to unlock", C.purple],
+                  ["PWA", "Install on any device", C.gold],
                   ["Free", "To get started", C.green],
                 ].map(([v, l, c]) => (
                   <div key={l} className="text-center">
@@ -492,7 +498,7 @@ export default function LandingPage({ onLogin, onSignup }) {
         </div>
 
         {/* Features */}
-        <section className="section">
+        <section id="features" className="section" style={{ scrollMarginTop: 80 }}>
           <div className="section-inner">
             <ScrollReveal>
               <div className="text-center mb-12">
@@ -521,8 +527,8 @@ export default function LandingPage({ onLogin, onSignup }) {
                   <div
                     className="w-11 h-11 rounded-2xl flex items-center justify-center mb-4 text-2xl shrink-0"
                     style={{
-                      background: `${f.accent}18`,
-                      border: `1px solid ${f.accent}30`,
+                      background: `color-mix(in srgb, ${f.accent} 9%, transparent)`,
+                      border: `1px solid color-mix(in srgb, ${f.accent} 19%, transparent)`,
                     }}
                   >
                     {f.icon}
@@ -544,7 +550,7 @@ export default function LandingPage({ onLogin, onSignup }) {
         </section>
 
         {/* How It Works */}
-        <section className="section pt-0">
+        <section id="how-it-works" className="section pt-0" style={{ scrollMarginTop: 80 }}>
           <div className="section-inner">
             <ScrollReveal>
               <div className="text-center mb-11">
@@ -624,11 +630,11 @@ export default function LandingPage({ onLogin, onSignup }) {
                   className="syne font-black leading-relaxed text-white mb-4 max-w-2xl"
                   style={{ fontSize: "clamp(18px, 3vw, 26px)" }}
                 >
-                  People complete 3x more tasks when they feel rewarded for their
-                  effort.
+                  Small wins build momentum.
                 </p>
                 <p className="text-sm" style={{ color: C.greyLight }}>
-                  Nudge is designed around that exact psychology.
+                  Nudge is built around that idea: every finished task gets a
+                  reaction.
                 </p>
               </div>
             </ScrollReveal>
@@ -680,9 +686,9 @@ export default function LandingPage({ onLogin, onSignup }) {
               Nudge<span style={{ color: C.purple }}>.</span>
             </div>
             <div className="flex gap-6 flex-wrap">
-              {["Features", "About", "Contact"].map((l) => (
-                <a key={l} href="#" className="nav-link">
-                  {l}
+              {NAV_LINKS.map(([label, href]) => (
+                <a key={label} href={href} className="nav-link">
+                  {label}
                 </a>
               ))}
             </div>

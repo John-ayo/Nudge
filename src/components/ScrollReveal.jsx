@@ -26,7 +26,7 @@ export default function ScrollReveal({
     const currentRef = ref.current;
     
     // Fallback if IntersectionObserver is not supported
-    if (!window.IntersectionObserver) {
+    if (!window.IntersectionObserver || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setIsVisible(true);
       return;
     }

@@ -2,20 +2,48 @@
 
 > The productivity app that celebrates you.
 
-Nudge is a web-first task management app built for students, professionals, and anyone who wants to feel motivated and celebrated when completing tasks. It combines streaks, XP, badges, and push notifications to turn productivity into something that actually feels good.
+**Live demo:** [nudge.com.ng](https://nudge.com.ng)
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+Nudge is a web-first task management app for students, professionals, and anyone who wants to feel motivated when finishing tasks. It combines XP, streaks, badges, and push notifications to make productivity feel rewarding.
 
 ---
 
-## What it does
+## Features
 
 - Create and manage tasks with priority levels, due dates, estimated time, and categories
 - Earn XP and level up as you complete tasks
-- Build daily streaks with streak protection (1 grace day per week)
-- Unlock badges for milestones (first task, 7-day streak, 100 tasks, and more)
-- Get push notifications: daily morning reminder, due date warnings at 24h/1h/20min, and a weekly pride report every Saturday
-- Receive a weekly pride email summarising your tasks done, XP earned, streak, and badges unlocked
-- Switch between dark and light mode with full theme-aware UI
-- Install as a PWA on Android, iOS (home screen), and desktop
+- Build daily streaks, with streak protection (1 grace day per week)
+- Unlock 7 badges for milestones (first task, 7-day streak, 100 tasks, and more)
+- Focus timer linked to your tasks, with celebration sounds
+- Push notifications: a daily morning reminder, due date warnings at 24h, 1h, and 20min, and a weekly pride report every Saturday
+- Weekly pride email summarising tasks done, XP earned, streak, and badges unlocked
+- Dark and light mode with a theme-aware UI
+- Installable as a PWA on Android, desktop, and iOS (via Add to Home Screen, iOS 16.4+)
+
+![Tasks](docs/screenshots/tasks.png)
+
+---
+
+## Architecture
+
+```
+React 18 PWA (Vite, Tailwind, Vercel)
+  |-- Service Worker (push events, notification clicks)
+  |-- PostHog (analytics)
+  v
+Supabase
+  |-- Auth (email/password, Google OAuth)
+  |-- Postgres + Row Level Security
+  |-- Storage (avatars)
+  |-- Edge Functions (Deno)
+  |     complete-task, send-push, welcome-email, delete-account
+  |     daily-reminder, due-date-warning, weekly-pride
+  '-- pg_cron (triggers scheduled jobs)
+Resend (transactional email)
+Web Push + VAPID (browser push)
+```
 
 ---
 
@@ -23,17 +51,54 @@ Nudge is a web-first task management app built for students, professionals, and 
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18 + Vite + Tailwind CSS |
+| Frontend | React 18, Vite, Tailwind CSS |
 | Hosting | Vercel |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth (email/password + Google OAuth) |
-| Realtime | Supabase Realtime |
+| Database | Supabase (PostgreSQL) with Row Level Security |
+| Auth | Supabase Auth (email/password, Google OAuth) |
 | Edge Functions | Supabase Edge Functions (Deno) |
 | Email | Resend |
-| Push Notifications | Web Push API + VAPID |
+| Push Notifications | Web Push API with VAPID |
 | Analytics | PostHog |
 | Icons | Lucide React |
-| Fonts | DM Sans (body) + Syne (headings) |
+| Fonts | DM Sans (body), Syne (headings) |
+
+---
+
+## Edge functions
+
+| Function | Trigger | Purpose |
+|---|---|---|
+| `complete-task` | HTTP POST | Awards XP, updates the streak, checks badges |
+| `send-push` | Internal (service role key only) | Sends a push notification to one user |
+| `daily-reminder` | pg_cron, every minute | Sends the morning reminder at each user's local time |
+| `due-date-warning` | pg_cron, every minute | Warns users 24h, 1h, and 20min before a due date |
+| `weekly-pride` | pg_cron, Saturday 18:00 UTC | Sends the weekly HTML email and a push |
+| `welcome-email` | Database trigger | Sends the welcome email on signup |
+| `delete-account` | HTTP POST | Deletes a user's account and data |
+
+## Scheduled jobs
+
+| Job | Schedule | Purpose |
+|---|---|---|
+| Streak reset | pg_cron, daily | Resets streaks for inactive users |
+
+Push delivery uses a shared helper (`supabase/functions/_shared/push.ts`) that sets a TTL and urgency per message type and removes expired subscriptions when the push service returns 404 or 410.
+
+---
+
+## Database
+
+9 tables in the `public` schema, all protected by Row Level Security:
+
+- `users`: id, email, name, avatar_url, created_at
+- `tasks`: id, user_id, title, priority, done, due_date, est, cat, category_id, created_at, updated_at
+- `categories`: id, user_id, name, icon, color, created_at
+- `xp_log`: id, user_id, task_id, amount, reason, created_at
+- `streaks`: id, user_id, current, best, grace_used, last_active
+- `badges`: id, user_id, badge_id, unlocked_at
+- `settings`: id, user_id, reminder_time, timezone, theme, accent_color, daily_goal, focus_mins, notification flags
+- `push_subscriptions`: id, user_id, endpoint, p256dh, auth
+- `notification_log`: id, user_id, task_id, type, sent_at
 
 ---
 
@@ -41,7 +106,7 @@ Nudge is a web-first task management app built for students, professionals, and 
 
 | Route | Page |
 |---|---|
-| `/` | Landing Page |
+| `/` | Landing page |
 | `/login` | Login |
 | `/signup` | Signup |
 | `/dashboard` | Dashboard |
@@ -58,47 +123,20 @@ Nudge is a web-first task management app built for students, professionals, and 
 
 ---
 
-## Database schema
-
-7 tables in the `public` schema:
-
-- `users` - id, email, name, avatar_url, created_at
-- `tasks` - id, user_id, title, priority, done, due_date, est, cat, category_id, created_at, updated_at
-- `categories` - id, user_id, name, icon, color, created_at
-- `xp_log` - id, user_id, task_id, amount, reason, created_at
-- `streaks` - id, user_id, current, best, grace_used, last_active
-- `badges` - id, user_id, badge_id, unlocked_at
-- `settings` - id, user_id, reminder_time, timezone, theme, accent_color, daily_goal, focus_mins, notification flags
-- `push_subscriptions` - id, user_id, endpoint, p256dh, auth
-- `notification_log` - id, user_id, task_id, type, sent_at
-
----
-
-## Edge functions
-
-| Function | Trigger | Purpose |
-|---|---|---|
-| `complete-task` | HTTP POST | Awards XP, updates streak, checks badges |
-| `streak-cron` | pg_cron daily | Resets streaks for inactive users |
-| `send-push` | HTTP POST | Sends a push notification to a specific user |
-| `daily-reminder` | pg_cron every minute | Fires morning reminder at each user's timezone |
-| `due-date-warning` | pg_cron every minute | Warns users at 24h, 1h, and 20min before due date |
-| `weekly-pride` | pg_cron Saturday 18:00 UTC | Sends HTML email + push with weekly summary |
-
----
-
 ## Design system
 
-- Background: `#000000` (dark) / `#FFFFFF` (light)
+- Background: `#000000` (dark), `#FFFFFF` (light)
 - Primary accent: Electric Purple `#6C63FF`
 - Body font: DM Sans
 - Heading font: Syne
-- Logo: Split tone wordmark — "Nu" in `#6C63FF`, "dge" in `#F5F5F5`
-- All colors adapt to theme via CSS variables
+- Logo: split tone wordmark, "Nu" in `#6C63FF` and "dge" in `#F5F5F5`
+- All colors adapt to the theme through CSS variables
 
 ---
 
 ## Local setup
+
+### Frontend
 
 ```bash
 git clone https://github.com/John-ayo/Nudge.git
@@ -119,19 +157,32 @@ Then run:
 npm run dev
 ```
 
----
+The app runs with just these two variables, but push notifications and emails need the backend below.
 
-## PWA
+### Backend (optional, for push and email)
 
-Nudge is installable as a Progressive Web App on Android, desktop (Chrome/Edge), and iOS (via Add to Home Screen on Safari, requires iOS 16.4+).
+1. Create a Supabase project and run `supabase/schema.sql` in the SQL editor.
+2. Generate a VAPID key pair for Web Push.
+3. Set the Edge Function secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, and `RESEND_API_KEY`.
+4. Deploy the functions:
+
+```bash
+npx supabase login
+npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase functions deploy daily-reminder
+npx supabase functions deploy due-date-warning
+npx supabase functions deploy weekly-pride
+```
+
+Repeat the deploy command for each function you need. Then schedule the cron jobs in the Supabase dashboard using the schedules in the table above.
 
 ---
 
 ## Roadmap
 
-- AI task assistant via Claude API (server-side edge function)
-- Collaborative tasks
-- Mobile app (React Native)
+- Recurring tasks, with per-task reminders
+- AI task breakdown through the Claude API (server-side Edge Function)
+- Google Calendar import
 
 ---
 

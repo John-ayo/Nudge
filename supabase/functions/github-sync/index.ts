@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const GH_TOKEN = Deno.env.get("GH_API_TOKEN")!;
+const INTERNAL_SECRET = Deno.env.get("INTERNAL_SECRET");
 
 const PR_XP = 30;            // tune to your XP economy
 const MAX_XP_PRS_PER_DAY = 3;
@@ -15,7 +16,8 @@ const json = (data: unknown, status = 200) =>
   });
 
 Deno.serve(async (req) => {
-  if (req.headers.get("Authorization") !== `Bearer ${SERVICE_KEY}`) {
+  // Server-to-server only. Fails closed if the secret is not configured.
+  if (!INTERNAL_SECRET || req.headers.get("x-internal-secret") !== INTERNAL_SECRET) {
     return json({ error: "Unauthorized" }, 401);
   }
 

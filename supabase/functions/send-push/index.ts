@@ -3,6 +3,7 @@ import { sendPushToUser } from "../_shared/push.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const INTERNAL_SECRET = Deno.env.get("INTERNAL_SECRET");
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
@@ -14,7 +15,8 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   // Server-to-server only. Public anon keys must not be able to push to users.
-  if (req.headers.get("Authorization") !== `Bearer ${SUPABASE_SERVICE_KEY}`) {
+  // Fails closed if the secret is not configured.
+  if (!INTERNAL_SECRET || req.headers.get("x-internal-secret") !== INTERNAL_SECRET) {
     return json({ error: "Unauthorized" }, 401);
   }
 

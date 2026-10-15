@@ -86,7 +86,7 @@ export default function GithubConnect() {
     <section className="rounded-2xl border border-grey bg-surface p-6">
       <div className="syne text-base font-bold text-white mb-1">GitHub</div>
       <p className="text-sm leading-relaxed mb-4" style={{ color: "#888888" }}>
-        Earn {XP_PER_PR} XP for each pull request you merge in a piblic repository, up to {MAX_PRS_PER_DAY} a
+        Earn {XP_PER_PR} XP for each pull request you merge in a public repository, up to {MAX_PRS_PER_DAY} a
         day. Only PRs merged after you connect count.
       </p>
 

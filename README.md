@@ -6,7 +6,7 @@
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
-Nudge is a web-first task management app for students, professionals, and anyone who wants to feel motivated when finishing tasks. It combines XP, streaks, badges, and push notifications to make productivity feel rewarding.
+Nudge is a web-first task management app for students, professionals, and anyone who wants to feel motivated when finishing tasks. It combines XP, streaks, badges, push notifications, and GitHub activity to make productivity feel rewarding.
 
 ---
 
@@ -17,6 +17,7 @@ Nudge is a web-first task management app for students, professionals, and anyone
 - Build daily streaks, with streak protection (1 grace day per week)
 - Unlock 7 badges for milestones (first task, 7-day streak, 100 tasks, and more)
 - Focus timer linked to your tasks, with celebration sounds
+- Connect GitHub and earn 30 XP for each pull request you merge in a public repository, up to 3 a day
 - Push notifications: a daily morning reminder, due date warnings at 24h, 1h, and 20min, and a weekly pride report every Saturday
 - Weekly pride email summarising tasks done, XP earned, streak, and badges unlocked
 - Dark and light mode with a theme-aware UI
@@ -34,16 +35,46 @@ React 18 PWA (Vite, Tailwind, Vercel)
   |-- PostHog (analytics)
   v
 Supabase
-  |-- Auth (email/password, Google OAuth)
+  |-- Auth (email/password, Google OAuth, GitHub account linking)
   |-- Postgres + Row Level Security
   |-- Storage (avatars)
   |-- Edge Functions (Deno)
   |     complete-task, send-push, welcome-email, delete-account
   |     daily-reminder, due-date-warning, weekly-pride
+  |     github-link, github-sync
   '-- pg_cron (triggers scheduled jobs)
 Resend (transactional email)
 Web Push + VAPID (browser push)
+GitHub REST API (merged pull request search, public data only)
 ```
+
+---
+
+## GitHub integration
+
+Users link their GitHub account from Settings. Nudge then polls GitHub for pull requests they have merged and awards XP.
+
+```
+User links GitHub (Supabase OAuth identity linking)
+        |
+github-link (Edge Function)
+        |-- reads the username from the verified OAuth identity
+        '-- saves it to github_links
+        |
+pg_cron (hourly) -> github-sync (Edge Function)
+        |-- searches merged PRs per linked user (GitHub search API)
+        |-- inserts new PRs into github_prs (unique per user and PR, so no double XP)
+        '-- awards XP through xp_log (30 XP, max 3 PRs a day)
+```
+
+Rules and safeguards:
+
+- Only pull requests in public repositories are counted. Commits never award XP, because they are too easy to fake.
+- Only PRs merged after the account was linked count, so linking cannot backfill XP.
+- The GitHub username comes from the verified OAuth identity on the server. Users cannot type in someone else's username.
+- One GitHub account can be linked to one Nudge account.
+- The GitHub tables are read-only for users through Row Level Security. Only Edge Functions write to them.
+- `github-sync` accepts the service role key only.
 
 ---
 
@@ -54,7 +85,7 @@ Web Push + VAPID (browser push)
 | Frontend | React 18, Vite, Tailwind CSS |
 | Hosting | Vercel |
 | Database | Supabase (PostgreSQL) with Row Level Security |
-| Auth | Supabase Auth (email/password, Google OAuth) |
+| Auth | Supabase Auth (email/password, Google OAuth, GitHub account linking) |
 | Edge Functions | Supabase Edge Functions (Deno) |
 | Email | Resend |
 | Push Notifications | Web Push API with VAPID |
@@ -75,6 +106,8 @@ Web Push + VAPID (browser push)
 | `weekly-pride` | pg_cron, Saturday 18:00 UTC | Sends the weekly HTML email and a push |
 | `welcome-email` | Database trigger | Sends the welcome email on signup |
 | `delete-account` | HTTP POST | Deletes a user's account and data |
+| `github-link` | HTTP POST (signed-in user) | Saves the verified GitHub username for the caller |
+| `github-sync` | pg_cron, hourly (service role key only) | Finds newly merged public PRs and awards XP |
 
 ## Scheduled jobs
 
@@ -88,7 +121,7 @@ Push delivery uses a shared helper (`supabase/functions/_shared/push.ts`) that s
 
 ## Database
 
-9 tables in the `public` schema, all protected by Row Level Security:
+12 tables in the `public` schema, all protected by Row Level Security:
 
 - `users`: id, email, name, avatar_url, created_at
 - `tasks`: id, user_id, title, priority, done, due_date, est, cat, category_id, created_at, updated_at
@@ -99,6 +132,9 @@ Push delivery uses a shared helper (`supabase/functions/_shared/push.ts`) that s
 - `settings`: id, user_id, reminder_time, timezone, theme, accent_color, daily_goal, focus_mins, notification flags
 - `push_subscriptions`: id, user_id, endpoint, p256dh, auth
 - `notification_log`: id, user_id, task_id, type, sent_at
+- `github_links`: user_id, username, linked_at
+- `github_prs`: id, user_id, pr_id, repo, title, merged_at, xp_awarded
+- `monthly_reports`: id, user_id, month, stats, emailed_at (reserved for the planned monthly report)
 
 ---
 
@@ -114,7 +150,7 @@ Push delivery uses a shared helper (`supabase/functions/_shared/push.ts`) that s
 | `/categories` | Categories |
 | `/calendar` | Calendar |
 | `/account` | Profile |
-| `/settings` | Settings |
+| `/settings` | Settings (includes GitHub connection) |
 | `/focus` | Focus Timer |
 | `/terms` | Terms and Conditions |
 | `/privacy` | Privacy Policy |
@@ -157,14 +193,16 @@ Then run:
 npm run dev
 ```
 
-The app runs with just these two variables, but push notifications and emails need the backend below.
+The app runs with just these two variables, but push notifications, emails, and GitHub XP need the backend below.
 
-### Backend (optional, for push and email)
+### Backend (optional, for push, email, and GitHub)
 
 1. Create a Supabase project and run `supabase/schema.sql` in the SQL editor.
 2. Generate a VAPID key pair for Web Push.
-3. Set the Edge Function secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, and `RESEND_API_KEY`.
-4. Deploy the functions:
+3. Set the Edge Function secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `RESEND_API_KEY`, and `GH_API_TOKEN`.
+4. For the GitHub integration, create a GitHub OAuth app with the Supabase callback URL, add its Client ID and Secret in the Supabase GitHub provider, turn on manual identity linking, and add your site's `/settings` URL to the allowed redirect URLs.
+5. `GH_API_TOKEN` is a GitHub personal access token with no permissions. It only raises the API rate limit for public data.
+6. Deploy the functions:
 
 ```bash
 npx supabase login
@@ -172,14 +210,17 @@ npx supabase link --project-ref YOUR_PROJECT_REF
 npx supabase functions deploy daily-reminder
 npx supabase functions deploy due-date-warning
 npx supabase functions deploy weekly-pride
+npx supabase functions deploy github-link
+npx supabase functions deploy github-sync
 ```
 
-Repeat the deploy command for each function you need. Then schedule the cron jobs in the Supabase dashboard using the schedules in the table above.
+Repeat the deploy command for each function you need. Then schedule the cron jobs in the Supabase dashboard using the schedules in the tables above.
 
 ---
 
 ## Roadmap
 
+- Monthly report with total streak run, active days, PRs merged, and commits, delivered by email and as a shareable card
 - Recurring tasks, with per-task reminders
 - AI task breakdown through the Claude API (server-side Edge Function)
 - Google Calendar import

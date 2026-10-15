@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import GithubConnect from "../components/GithubConnect";
 import {
   fetchSettings,
   updateSettings,
@@ -12,7 +13,7 @@ import {
   clearAllTasks,
   deleteAccount,
 } from "../lib/settings";
-import { subscribeToPush, isPushSupported, getNotificationPermission } from "../lib/push";
+import { subscribeToPush, isPushSupported } from "../lib/push";
 
 const MenuIcon     = () => (<svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>);
 const UploadIcon   = () => (<svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>);
@@ -31,8 +32,8 @@ const FOCUS_OPTIONS = [
 ];
 
 // These three toggles depend on a working push subscription.
-// streakAlert is a local check, celebrationSfx is unrelated to push —
-// neither needs to trigger the permission flow.
+// streakAlert is a local check and celebrationSfx is unrelated to push,
+// so neither needs to trigger the permission flow.
 const PUSH_NOTIF_KEYS = ["dailyReminder", "dueDateWarning", "weeklyPride"];
 
 function Toggle({ on, onChange, accent = "var(--accent)" }) {
@@ -210,11 +211,12 @@ export default function SettingsPage({ onMenuOpen, user }) {
     reader.readAsDataURL(file);
   }
 
-  // Turning on a push-dependent toggle for the first time triggers the
-  // browser permission prompt and saves the subscription. If permission
-  // is denied or push isn't supported, the toggle stays off and the
-  // person sees why. Turning a push toggle off never unsubscribes —
-  // the other push toggles may still need this device's subscription.
+  // Turning on a push-dependent toggle triggers the browser permission
+  // prompt and saves the subscription. The toggle only flips on if a
+  // subscription was actually created. If permission is denied or push
+  // is not supported, it stays off and the person sees why. Turning a
+  // push toggle off never unsubscribes: the other push toggles may
+  // still need this device's subscription.
   async function toggleNotif(key) {
     const turningOn = !notifs[key];
 
@@ -225,12 +227,9 @@ export default function SettingsPage({ onMenuOpen, user }) {
       }
 
       const subscription = await subscribeToPush(user.id);
-      if (getNotificationPermission() !== "granted") {
-        const subscription = await subscribeToPush(user.id);
-        if (!subscription) {
-          showToast("Enable notifications in your browser to turn this on", "error");
-          return;
-        }
+      if (!subscription) {
+        showToast("Enable notifications in your browser to turn this on", "error");
+        return;
       }
     }
 
@@ -450,7 +449,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
             <div className="-mt-2">
               <NotifRow label="Daily task reminder"       sub="Get nudged each morning to set your tasks"  on={notifs.dailyReminder}   onChange={() => toggleNotif("dailyReminder")}   accent={accent}/>
               <NotifRow label="Streak alert"              sub="Know when your streak is at risk"           on={notifs.streakAlert}     onChange={() => toggleNotif("streakAlert")}     accent={accent}/>
-              <NotifRow label="Due date warning"          sub="Get warned 1 hour before a task is due"     on={notifs.dueDateWarning}  onChange={() => toggleNotif("dueDateWarning")}  accent={accent}/>
+              <NotifRow label="Due date warning"          sub="Get warned 24 hours, 1 hour and 20 minutes before a task is due" on={notifs.dueDateWarning}  onChange={() => toggleNotif("dueDateWarning")}  accent={accent}/>
               <NotifRow label="Weekly pride report"       sub="A summary of everything you crushed"        on={notifs.weeklyPride}     onChange={() => toggleNotif("weeklyPride")}     accent={accent}/>
               <NotifRow label="Celebration sound effects" sub="Play sounds when you complete tasks"        on={notifs.celebrationSfx}  onChange={() => toggleNotif("celebrationSfx")}  accent={accent}/>
             </div>
@@ -561,6 +560,11 @@ export default function SettingsPage({ onMenuOpen, user }) {
                 Auto
               </span>
             </div>
+          </Section>
+
+          {/* Integrations */}
+          <Section title="GitHub" sub="Turn merged pull requests into XP">
+            <GithubConnect accent={accent}/>
           </Section>
 
           {/* Privacy */}

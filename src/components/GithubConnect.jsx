@@ -91,14 +91,16 @@ export default function GithubConnect({ accent }) {
     const { data, error: fnError } = await supabase.functions.invoke("github-sync-me");
 
     if (fnError) {
+      console.error("github-sync-me error:", fnError);
+      const status = fnError?.context?.status;
       let text = "Could not sync right now. Please try again.";
       try {
         const body = await fnError?.context?.json();
         if (body?.retry_after) {
           const mins = Math.ceil(body.retry_after / 60);
           text = `You synced a moment ago. Try again in about ${mins} min.`;
-        } else if (body?.error) {
-          text = body.error;
+        } else if (body?.error || body?.message) {
+          text = body.error ?? body.message;
         }
       } catch {
         // keep the generic message

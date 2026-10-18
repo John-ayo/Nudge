@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendPushToUser } from "../_shared/push.ts";
+import { requireInternalSecret } from "../_shared/internal-auth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -159,7 +160,10 @@ function buildEmailHtml(params: {
 </html>`;
 }
 
-Deno.serve(async () => {
+Deno.serve(async (rep) => {
+  const denied = requireInternalSecret(req);
+  if (denied) return denied;
+  
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();

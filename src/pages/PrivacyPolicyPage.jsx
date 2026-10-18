@@ -1,5 +1,9 @@
 import LegalLayout, { LegalSection } from "../components/LegalLayout";
 
+// This mailbox must exist and receive mail before you publish.
+// Sending domain verification in Resend does not give you an inbox.
+const CONTACT_EMAIL = "johnpaulthedev@gemail.com";
+
 const SECTIONS = [
   {
     title: "1. Information We Collect",
@@ -9,6 +13,8 @@ const SECTIONS = [
         "Email address: collected at signup for account creation and login.",
         "Display name: provided by you when creating your account.",
         "Task and productivity data: tasks, categories, completion records, streaks, and XP that you create within the App.",
+        "GitHub username and public pull request details (repository, PR number, title, merge date): collected only if you choose to link your GitHub account in Settings. We read public data only.",
+        "Push notification subscription details (browser endpoint and encryption keys): collected only if you enable notifications.",
         "Usage analytics: anonymized behavioral data such as which features you use, click patterns, and session duration, collected via PostHog.",
         "Device and browser information: collected automatically for security and performance purposes.",
       ]},
@@ -23,6 +29,7 @@ const SECTIONS = [
         "Create and manage your account.",
         "Deliver and improve the features of the App.",
         "Track your productivity data (streaks, XP, badges) to provide the App's core experience.",
+        "Award XP for merged pull requests on public repositories, if you link your GitHub account.",
         "Understand how users interact with the App through aggregated analytics.",
         "Send important service-related communications (e.g. account updates, policy changes).",
       ]},
@@ -36,7 +43,7 @@ const SECTIONS = [
       { type: "ul", items: [
         "Contractual necessity: to provide you with the App's services.",
         "Legitimate interests: to improve App performance and prevent abuse.",
-        "Consent: where we ask for your explicit permission, such as for optional notifications.",
+        "Consent: where we ask for your explicit permission, such as for optional notifications or for linking your GitHub account.",
       ]},
       { type: "p", text: "You may withdraw consent at any time without affecting the lawfulness of prior processing." },
     ],
@@ -53,7 +60,7 @@ const SECTIONS = [
         "Objection: object to certain types of processing.",
         "Opt-out of sale (CCPA): we do not sell personal data. California residents may still submit a request to confirm this.",
       ]},
-      { type: "p", text: "To exercise any of these rights, contact us at legal@nudgeapp.io. We will respond within 30 days." },
+      { type: "p", text: `To exercise any of these rights, contact us at ${CONTACT_EMAIL}. We will respond within 30 days.` },
     ],
   },
   {
@@ -81,7 +88,10 @@ const SECTIONS = [
       { type: "p", text: "We share your data with the following third-party service providers, who process it on our behalf:" },
       { type: "ul", items: [
         "Supabase (supabase.com): database storage, authentication, and real-time services. Data is stored on Supabase infrastructure.",
+        "Vercel (vercel.com): application hosting.",
+        "Resend (resend.com): email delivery for service messages and weekly summaries.",
         "PostHog (posthog.com): product analytics. PostHog receives anonymized usage data. We have configured PostHog to minimize personal data exposure.",
+        "GitHub (github.com): if you link your account, we send your GitHub username to GitHub's public API to look up your public pull requests.",
       ]},
       { type: "p", text: "These providers are contractually obligated to protect your data and may not use it for their own purposes beyond what is necessary to provide us their services." },
     ],
@@ -116,7 +126,7 @@ export default function PrivacyPolicyPage() {
   return (
     <LegalLayout
       title="Privacy Policy"
-      effectiveDate="June 8, 2025"
+      effectiveDate="October 16, 2026"
       intro={`This Privacy Policy describes how Nudge ("we," "us," or "our") collects, uses, and protects your personal information when you use the Nudge application. By using the App, you agree to the practices described in this Policy.`}
       notice={`Nudge is operated from Nigeria. This policy is designed to comply with Nigeria's NDPR, the EU's GDPR, and California's CCPA, reflecting our intent to serve a global audience.`}
       otherPageLabel="Terms and Conditions"
@@ -130,8 +140,8 @@ export default function PrivacyPolicyPage() {
         </h2>
         <p className="text-sm leading-relaxed mb-3" style={{ color: "var(--text-muted)" }}>
           For privacy-related questions, requests, or complaints, contact:{" "}
-          <a href="mailto:legal@nudgeapp.io" className="font-semibold hover:underline" style={{ color: "var(--accent)" }}>
-            legal@nudgeapp.io
+          <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold hover:underline" style={{ color: "var(--accent)" }}>
+            {CONTACT_EMAIL}
           </a>
         </p>
         <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>

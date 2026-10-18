@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendPushToUser } from "../_shared/push.ts";
+import { requireInternalSecret } from "../_shared/internal-auth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -42,7 +43,10 @@ function todayKey(tz: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date());
 }
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  const denied = requireInternalSecret(req);
+  if (denied) return denied;
+  
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   const { data: settings, error: settingsError } = await supabase

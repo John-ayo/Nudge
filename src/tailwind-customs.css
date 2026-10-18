@@ -603,3 +603,24 @@
     font-size: 1.25rem;
   }
 }
+
+/* Light theme overrides for the landing page. Dark rules above are unchanged. */
+[data-theme="light"] .btn-ghost { color: var(--lp-muted); border-color: var(--lp-border); }
+[data-theme="light"] .btn-ghost:hover { border-color: var(--accent); color: var(--lp-heading); }
+[data-theme="light"] .btn-primary:hover { box-shadow: 0 1rem 1.75rem rgba(108, 99, 255, 0.3); }
+[data-theme="light"] .nav-wrap.scrolled { background: var(--lp-overlay); border-bottom-color: var(--lp-border); }
+[data-theme="light"] .nav-link { color: var(--lp-muted); }
+[data-theme="light"] .nav-link:hover { color: var(--lp-heading); }
+[data-theme="light"] .hamburger span { background: var(--lp-heading); }
+[data-theme="light"] .mobile-menu { background: var(--lp-overlay); border-top-color: var(--lp-border); }
+[data-theme="light"] .mobile-menu .nav-link { border-bottom-color: var(--lp-border); }
+[data-theme="light"] .hero-h1 { color: var(--lp-heading); }
+[data-theme="light"] .feature-card,
+[data-theme="light"] .how-card { background: var(--lp-surface); border-color: var(--lp-border); }
+[data-theme="light"] .feature-card:hover { border-color: var(--accent); box-shadow: 0 0.75rem 2.5rem rgba(108, 99, 255, 0.14); }
+[data-theme="light"] .footer { border-top-color: var(--lp-border); }
+[data-theme="light"] .grid-bg {
+  background-image: linear-gradient(rgba(108, 99, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108, 99, 255, 0.07) 1px, transparent 1px);
+}
+[data-theme="light"] .orb { opacity: 0.07; }

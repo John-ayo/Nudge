@@ -21,12 +21,14 @@ import ServerErrorPage from "./pages/ServerErrorPage";
 import FocusPage       from "./pages/FocusPage";
 import TermsConditionsPage from "./pages/TermsConditionsPage";
 import PrivacyPolicyPage   from "./pages/PrivacyPolicyPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage  from "./pages/ResetPasswordPage";
 
 // Components
 
 import Sidebar from "./components/Sidebar";
 
-const NO_SIDEBAR = ["/", "/login", "/signup", "/500", "/focus", "/terms", "/privacy"];
+const NO_SIDEBAR = ["/", "/login", "/signup", "/forgot-password", "/reset-password", "/500", "/focus", "/terms", "/privacy"];
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -71,6 +73,8 @@ function AppShell() {
             <Route path="/focus"  element={<FocusPage />} />
             <Route path="/terms"   element={<TermsConditionsPage />} />
             <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password"  element={<ResetPasswordPage />} />
             <Route path="/dashboard"  element={<ProtectedRoute><DashboardPage  onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
             <Route path="/tasks"      element={<ProtectedRoute><MyTasksPage    onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
             <Route path="/categories" element={<ProtectedRoute><CategoriesPage onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />

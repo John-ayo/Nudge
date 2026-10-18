@@ -6,6 +6,12 @@
   --accent: #6C63FF;
 }
 
+body {
+  background: var(--bg-base);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-primary);
+}
+
 @layer base {
   * {
     box-sizing: border-box;

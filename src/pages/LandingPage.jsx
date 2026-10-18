@@ -1,26 +1,28 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import ScrollReveal from "../components/ScrollReveal";
+import ThemeToggle from "../components/ThemeToggle";
+import { usePublicTheme } from "../lib/publicTheme";
 
 import "../tailwind-customs.css";
 
-// Palette
+// Palette: every value is a theme variable (see the tokens file)
 const C = {
-  black: "#000000",
-  surface: "#0D0D0D",
-  card: "#111111",
+  black: "var(--lp-bg)",
+  surface: "var(--lp-surface)",
+  card: "var(--lp-card)",
   purple: "var(--accent)",
-  purpleDim: "#3D3870",
-  purpleLight: "#A89EFF",
-  green: "#00E896",
-  gold: "#FFD166",
-  red: "#FF6B6B",
-  teal: "#00BFA6",
-  white: "#FFFFFF",
-  offwhite: "#F5F5F5",
-  grey: "#2A2A2A",
-  greyMid: "#444444",
-  greyLight: "#888888",
+  purpleDim: "var(--lp-accent-dim)",
+  purpleLight: "var(--lp-accent-light)",
+  green: "var(--lp-green)",
+  gold: "var(--lp-gold)",
+  red: "var(--lp-red)",
+  teal: "var(--lp-teal)",
+  white: "var(--lp-heading)",
+  offwhite: "var(--lp-text)",
+  grey: "var(--lp-border)",
+  greyMid: "var(--lp-border-mid)",
+  greyLight: "var(--lp-muted)",
 };
 
 // Only link to things that exist on this page
@@ -75,15 +77,18 @@ function HeroTaskCard() {
     <div className="relative">
       {celebrate && confetti.map((p) => <ConfettiPiece key={p.id} {...p} />)}
       <div
-        className="bg-surface border border-grey rounded-2xl p-6 w-full max-w-xs"
+        className="border rounded-2xl p-6 w-full max-w-xs"
         style={{
-          boxShadow: `0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(108,99,255,0.1)`,
+          background: C.surface,
+          borderColor: C.grey,
+          boxShadow: "var(--lp-shadow)",
         }}
       >
         {celebrate && (
           <div
-            className="absolute inset-0 bg-black/92 rounded-2xl flex flex-col items-center justify-center z-10"
+            className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center z-10"
             style={{
+              background: "var(--lp-overlay)",
               animation: "fadeIn 0.3s ease",
             }}
           >
@@ -91,7 +96,7 @@ function HeroTaskCard() {
             <div className="syne text-xl font-black" style={{ color: C.gold }}>
               WELL DONE!
             </div>
-            <div className="text-offwhite text-sm mt-1.5">
+            <div className="text-sm mt-1.5" style={{ color: C.offwhite }}>
               You crushed it 💪
             </div>
             <div
@@ -107,7 +112,9 @@ function HeroTaskCard() {
         )}
 
         <div className="flex items-center justify-between mb-4.5">
-          <div className="syne text-white font-black text-sm">Today's Tasks</div>
+          <div className="syne font-black text-sm" style={{ color: C.white }}>
+            Today's Tasks
+          </div>
           <div
             className="rounded-full py-0.75 px-2.5 text-xs font-semibold"
             style={{
@@ -152,7 +159,7 @@ function HeroTaskCard() {
                 <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
                   <path
                     d="M2 6l3 3 5-5"
-                    stroke="#000"
+                    style={{ stroke: "var(--lp-on-green)" }}
                     strokeWidth="2.2"
                     strokeLinecap="round"
                   />
@@ -190,10 +197,12 @@ function HeroTaskCard() {
           </div>
         )}
 
-        <div className="mt-3.5 pt-3.5 border-t border-grey">
+        <div className="mt-3.5 pt-3.5 border-t" style={{ borderColor: C.grey }}>
           <div className="flex justify-between mb-1.5">
-            <span className="text-greyLight text-xs">Daily Progress</span>
-            <span className="text-purpleLight text-xs font-semibold">
+            <span className="text-xs" style={{ color: C.greyLight }}>
+              Daily Progress
+            </span>
+            <span className="text-xs font-semibold" style={{ color: C.purpleLight }}>
               {taskDone ? "2/3" : "1/3"}
             </span>
           </div>
@@ -215,6 +224,7 @@ function HeroTaskCard() {
 // Main Landing Page
 export default function LandingPage({ onLogin, onSignup }) {
   const navigate = useNavigate();
+  const { theme, toggle } = usePublicTheme();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -310,7 +320,7 @@ export default function LandingPage({ onLogin, onSignup }) {
   ];
 
   return (
-    <>
+    <div data-theme={theme} style={{ colorScheme: theme }}>
       <div className="grid-bg" />
       <div
         className="orb"
@@ -333,12 +343,15 @@ export default function LandingPage({ onLogin, onSignup }) {
         }}
       />
 
-      <div className="min-h-screen overflow-y-auto bg-black relative">
+      <div
+        className="min-h-screen overflow-y-auto relative"
+        style={{ background: C.black, color: C.offwhite }}
+      >
         {/* Navbar */}
         <nav className={`nav-wrap${scrolled ? " scrolled" : ""}`}>
           <div className="nav-inner">
-            <div className="syne text-2xl font-black text-white">
-              Nudge<span className="text-purple">.</span>
+            <div className="syne text-2xl font-black" style={{ color: C.white }}>
+              Nudge<span style={{ color: C.purple }}>.</span>
             </div>
             <div className="nav-links">
               {NAV_LINKS.map(([label, href]) => (
@@ -348,6 +361,7 @@ export default function LandingPage({ onLogin, onSignup }) {
               ))}
             </div>
             <div className="nav-actions">
+              <ThemeToggle theme={theme} onToggle={toggle} />
               <button
                 className="btn-ghost hidden sm:block px-5 py-2.25 text-sm"
                 onClick={() => navigate("/login")}
@@ -472,8 +486,9 @@ export default function LandingPage({ onLogin, onSignup }) {
 
         {/* Ticker */}
         <div
-          className="overflow-hidden border-t border-b border-grey py-3 bg-surface"
+          className="overflow-hidden border-t border-b py-3"
           style={{
+            background: C.surface,
             borderColor: C.grey,
           }}
         >
@@ -504,8 +519,8 @@ export default function LandingPage({ onLogin, onSignup }) {
               <div className="text-center mb-12">
                 <div className="section-label">Why Nudge</div>
                 <h2
-                  className="syne font-black leading-tight -tracking-0.5 text-white"
-                  style={{ fontSize: "clamp(24px, 4vw, 38px)" }}
+                  className="syne font-black leading-tight -tracking-0.5"
+                  style={{ fontSize: "clamp(24px, 4vw, 38px)", color: C.white }}
                 >
                   <span className="text-reveal-wrapper"><span className="text-reveal-inner">Every task has a beginning,</span></span>
                   <br />
@@ -533,7 +548,7 @@ export default function LandingPage({ onLogin, onSignup }) {
                   >
                     {f.icon}
                   </div>
-                  <div className="syne text-base font-bold mb-2 text-white">
+                  <div className="syne text-base font-bold mb-2" style={{ color: C.white }}>
                     {f.title}
                   </div>
                   <div
@@ -556,8 +571,8 @@ export default function LandingPage({ onLogin, onSignup }) {
               <div className="text-center mb-11">
                 <div className="section-label">The Loop</div>
                 <h2
-                  className="syne font-black text-white -tracking-0.25"
-                  style={{ fontSize: "clamp(22px, 3.5vw, 34px)" }}
+                  className="syne font-black -tracking-0.25"
+                  style={{ fontSize: "clamp(22px, 3.5vw, 34px)", color: C.white }}
                 >
                   How Nudge works
                 </h2>
@@ -588,7 +603,7 @@ export default function LandingPage({ onLogin, onSignup }) {
                   >
                     {step.label}
                   </div>
-                  <div className="syne text-base font-bold mb-2 text-white">
+                  <div className="syne text-base font-bold mb-2" style={{ color: C.white }}>
                     {step.title}
                   </div>
                   <div
@@ -627,8 +642,8 @@ export default function LandingPage({ onLogin, onSignup }) {
                   "
                 </div>
                 <p
-                  className="syne font-black leading-relaxed text-white mb-4 max-w-2xl"
-                  style={{ fontSize: "clamp(18px, 3vw, 26px)" }}
+                  className="syne font-black leading-relaxed mb-4 max-w-2xl"
+                  style={{ fontSize: "clamp(18px, 3vw, 26px)", color: C.white }}
                 >
                   Small wins build momentum.
                 </p>
@@ -654,8 +669,8 @@ export default function LandingPage({ onLogin, onSignup }) {
               >
                 <div className="text-5xl mb-3.5">✦</div>
                 <h2
-                  className="syne font-black text-white -tracking-0.25 mb-3.5"
-                  style={{ fontSize: "clamp(28px, 5vw, 44px)" }}
+                  className="syne font-black -tracking-0.25 mb-3.5"
+                  style={{ fontSize: "clamp(28px, 5vw, 44px)", color: C.white }}
                 >
                   Your next win is
                   <br />
@@ -682,7 +697,7 @@ export default function LandingPage({ onLogin, onSignup }) {
         {/* Footer */}
         <footer className="footer">
           <div className="footer-inner">
-            <div className="syne text-xl font-black text-white">
+            <div className="syne text-xl font-black" style={{ color: C.white }}>
               Nudge<span style={{ color: C.purple }}>.</span>
             </div>
             <div className="flex gap-6 flex-wrap">
@@ -715,6 +730,6 @@ export default function LandingPage({ onLogin, onSignup }) {
           </div>
         </footer>
       </div>
-    </>
+    </div>
   );
 }

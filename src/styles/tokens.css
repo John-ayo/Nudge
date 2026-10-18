@@ -1,4 +1,4 @@
-/* ── Nudge Design Tokens ─────────────────────────────────────────── */
+/* Nudge Design Tokens */
 
 :root,
 [data-theme="dark"] {
@@ -19,6 +19,36 @@
   --text-disabled: #555555;
 
   --accent: #6C63FF;
+
+  /* Status colors */
+  --danger:         #f87171;
+  --danger-bg:      rgba(239, 68, 68, 0.08);
+  --danger-border:  rgba(248, 113, 113, 0.2);
+  --warn:           #fcd34d;
+  --warn-bg:        rgba(245, 158, 11, 0.08);
+  --warn-border:    rgba(251, 191, 36, 0.2);
+  --success:        #34d399;
+  --success-bg:     rgba(16, 185, 129, 0.08);
+  --success-border: rgba(52, 211, 153, 0.2);
+
+  /* Landing page palette */
+  --lp-bg:           #000000;
+  --lp-surface:      #0d0d0d;
+  --lp-card:         #111111;
+  --lp-border:       #2a2a2a;
+  --lp-border-mid:   #444444;
+  --lp-text:         #f5f5f5;
+  --lp-heading:      #ffffff;
+  --lp-muted:        #888888;
+  --lp-accent-dim:   #3d3870;
+  --lp-accent-light: #a89eff;
+  --lp-green:        #00e896;
+  --lp-on-green:     #000000;
+  --lp-gold:         #ffd166;
+  --lp-red:          #ff6b6b;
+  --lp-teal:         #00bfa6;
+  --lp-overlay:      rgba(0, 0, 0, 0.92);
+  --lp-shadow:       0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(108, 99, 255, 0.1);
 }
 
 [data-theme="light"] {
@@ -39,4 +69,34 @@
   --text-disabled: #aaaaaa;
 
   --accent: #6C63FF;
+
+  /* Status colors */
+  --danger:         #dc2626;
+  --danger-bg:      rgba(220, 38, 38, 0.07);
+  --danger-border:  rgba(220, 38, 38, 0.25);
+  --warn:           #b45309;
+  --warn-bg:        rgba(245, 158, 11, 0.1);
+  --warn-border:    rgba(180, 83, 9, 0.3);
+  --success:        #047857;
+  --success-bg:     rgba(16, 185, 129, 0.1);
+  --success-border: rgba(4, 120, 87, 0.3);
+
+  /* Landing page palette */
+  --lp-bg:           #f8f8f8;
+  --lp-surface:      #ffffff;
+  --lp-card:         #ffffff;
+  --lp-border:       #e0e0e0;
+  --lp-border-mid:   #cfcfcf;
+  --lp-text:         #1f1f1f;
+  --lp-heading:      #0a0a0a;
+  --lp-muted:        #6b7280;
+  --lp-accent-dim:   #e6e4ff;
+  --lp-accent-light: #4f46d8;
+  --lp-green:        #00a36c;
+  --lp-on-green:     #ffffff;
+  --lp-gold:         #c98a00;
+  --lp-red:          #e5484d;
+  --lp-teal:         #008f7e;
+  --lp-overlay:      rgba(255, 255, 255, 0.94);
+  --lp-shadow:       0 24px 60px rgba(60, 50, 140, 0.14), 0 0 0 1px rgba(108, 99, 255, 0.12);
 }

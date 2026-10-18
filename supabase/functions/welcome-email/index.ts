@@ -3,7 +3,6 @@ import { BRAND, renderEmail, sendEmail } from "../_shared/email.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const FRESH_SIGNUP_MS = 15 * 60 * 1000;
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -37,19 +36,25 @@ Deno.serve(async (req) => {
   try {
     const payload = await req.json();
     const claimed = payload.record ?? payload;
-    const userId = claimed?.id;
-    if (!userId) return json({ error: "No user id" }, 400);
+    const email = typeof claimed?.email === "string" ? claimed.email.trim() : "";
+    if (!email) return json({ error: "No email" }, 400);
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // Trust Supabase Auth, not the request body
-    const { data, error } = await supabase.auth.admin.getUserById(userId);
-    const user = data?.user;
-    if (error || !user?.email) return json({ error: "User not found" }, 404);
-
-    if (Date.now() - new Date(user.created_at).getTime() > FRESH_SIGNUP_MS) {
-      return json({ skipped: "not a new signup" });
+    // Only accounts created in the last 15 minutes can match
+    const { data: rows, error: lookupError } = await supabase.rpc(
+      "find_fresh_user_by_email",
+      { p_email: email }
+    );
+    if (lookupError) {
+      console.error("Lookup failed:", lookupError.message);
+      return json({ error: "Lookup failed" }, 500);
     }
+
+    const found = rows?.[0];
+    if (!found) return json({ error: "User not found" }, 404);
+
+    const userId = found.id;
 
     const { data: already } = await supabase
       .from("notification_log")
@@ -59,8 +64,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (already) return json({ skipped: "already welcomed" });
 
-    const meta = user.user_metadata ?? {};
-    const fullName: string = meta.full_name ?? meta.name ?? user.email.split("@")[0];
+    const fullName: string = found.full_name ?? email.split("@")[0];
     const firstName = (fullName.trim().split(/\s+/)[0] || "there").slice(0, 40);
 
     const html = renderEmail({
@@ -77,7 +81,7 @@ Deno.serve(async (req) => {
 
     const sent = await sendEmail({
       from: "Nudge <welcome@nudge.com.ng>",
-      to: user.email,
+      to: email,
       subject: `Welcome to Nudge, ${firstName}. Let's get to work.`,
       html,
     });

@@ -61,3 +61,22 @@ export async function getUser() {
   if (error) throw error
   return data.user
 }
+
+export async function requestPasswordReset(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`
+  })
+  if (error) throw error
+}
+
+export async function updatePassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (error) throw error
+
+  // A reset usually means the old password may be compromised, so end other sessions
+  try {
+    await supabase.auth.signOut({ scope: 'others' })
+  } catch (err) {
+    console.error('Could not end other sessions:', err)
+  }
+}

@@ -17,6 +17,7 @@ const NAV = [
   { label: "Calendar",   Icon: Calendar,        path: "/calendar"   },
   { label: "Settings",   Icon: Settings,        path: "/settings"   },
   { label: "Account",    Icon: User,            path: "/account"    },
+  { label: "Reports",    Icon: Zap,             path: "/reports"    },
 ];
 
 function getLevel(totalXP) { return Math.floor(totalXP / 500) + 1; }

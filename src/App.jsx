@@ -23,6 +23,7 @@ import TermsConditionsPage from "./pages/TermsConditionsPage";
 import PrivacyPolicyPage   from "./pages/PrivacyPolicyPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage  from "./pages/ResetPasswordPage";
+import ReportsPage from "./pages/ReportsPage";
 
 // Components
 
@@ -81,6 +82,8 @@ function AppShell() {
             <Route path="/calendar"   element={<ProtectedRoute><CalendarPage   onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
             <Route path="/account"    element={<ProtectedRoute><ProfilePage    onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
             <Route path="/settings"   element={<ProtectedRoute><SettingsPage   onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
+            <Route path="/reports"    element={<ProtectedRoute><ReportsPage    onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
+            <Route path="/reports/:month" element={<ProtectedRoute><ReportsPage onMenuOpen={() => setOpen(true)} user={user} /></ProtectedRoute>} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>

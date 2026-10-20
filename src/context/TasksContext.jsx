@@ -115,7 +115,7 @@ export function TasksProvider({ children }) {
         if (res.error) console.error("complete-task error:", res.error);
 
         if (res.data) {
-          const { xp_awarded, new_streak, new_badges = [] } = res.data;
+          const { xp_awarded, new_streak, new_badges = [], duplicate } = res.data;
 
           // FIX 4: totalXP was only ever updated via the xp_log realtime
           // subscription. If that subscription isn't actually delivering
@@ -154,7 +154,7 @@ export function TasksProvider({ children }) {
               setPendingBadges(prev => [...prev, ...new_badges]);
             }, 4000);
           }
-        }
+        } if (duplicate) return;
       }
     } catch (err) {
       setTasks(prev => prev.map(t => t.id === task.id ? { ...t, done: task.done } : t));

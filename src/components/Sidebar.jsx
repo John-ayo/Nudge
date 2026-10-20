@@ -120,7 +120,7 @@ export default function Sidebar({ open, onClose }) {
         {/* Nav */}
         <nav className="flex-1 px-3 space-y-0.5 pt-2">
           {NAV.map(({ label, Icon, path }) => {
-            const isActive = location.pathname === path;
+            const isActive = location.pathname === path || location.pathname.startsWith(path + "/");;
             return (
               <button key={label} onClick={() => handleNav(path)}
                 className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"

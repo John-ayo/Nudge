@@ -26,6 +26,8 @@ function StatTile({ value, label }) {
 }
 
 // Rendered off screen, then converted to a PNG. Inline styles on purpose.
+// The wrapper hides the card off screen. The captured node (cardRef) must not be
+// positioned off screen itself, or the clone renders outside the image and comes out blank.
 function ShareCard({ stats, cardRef }) {
   const cell = {
     background: "#111111",
@@ -42,43 +44,43 @@ function ShareCard({ stats, cardRef }) {
   if (typeof stats.commits === "number" && stats.commits > 0) extras.push(`${stats.commits} public commits`);
 
   return (
-    <div
-      ref={cardRef}
-      style={{
-        position: "fixed",
-        left: "-10000px",
-        top: 0,
-        width: 1080,
-        height: 1350,
-        background: "radial-gradient(circle at 20% 100%, rgba(108,99,255,0.28), #000000 60%)",
-        color: "#F5F5F5",
-        fontFamily: "'DM Sans', Arial, sans-serif",
-        padding: 80,
-        boxSizing: "border-box",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-      }}
-    >
-      <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 56, fontWeight: 800 }}>
-        <span style={{ color: "#6C63FF" }}>Nu</span>dge
-      </div>
+    <div aria-hidden="true" style={{ position: "fixed", left: "-10000px", top: 0, pointerEvents: "none" }}>
+      <div
+        ref={cardRef}
+        style={{
+          width: 1080,
+          height: 1350,
+          backgroundColor: "#000000",
+          backgroundImage: "radial-gradient(circle at 20% 100%, rgba(108,99,255,0.28), #000000 60%)",
+          color: "#F5F5F5",
+          fontFamily: "'DM Sans', Arial, sans-serif",
+          padding: 80,
+          boxSizing: "border-box",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 56, fontWeight: 800 }}>
+          <span style={{ color: "#6C63FF" }}>Nu</span>dge
+        </div>
 
-      <div>
-        <div style={{ fontSize: 34, color: "#A89EFF", letterSpacing: 4, textTransform: "uppercase" }}>My month on Nudge</div>
-        <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 92, fontWeight: 800, marginTop: 12 }}>{stats.label}</div>
-      </div>
+        <div>
+          <div style={{ fontSize: 34, color: "#A89EFF", letterSpacing: 4, textTransform: "uppercase" }}>My month on Nudge</div>
+          <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 92, fontWeight: 800, marginTop: 12 }}>{stats.label}</div>
+        </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
-        <div style={cell}><div style={num}>{stats.tasksDone}</div><div style={cap}>Tasks done</div></div>
-        <div style={cell}><div style={num}>{stats.xpEarned}</div><div style={cap}>XP earned</div></div>
-        <div style={cell}><div style={num}>{stats.activeDays}</div><div style={cap}>Active days</div></div>
-        <div style={cell}><div style={num}>{stats.longestRun}</div><div style={cap}>Best run</div></div>
-      </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+          <div style={cell}><div style={num}>{stats.tasksDone}</div><div style={cap}>Tasks done</div></div>
+          <div style={cell}><div style={num}>{stats.xpEarned}</div><div style={cap}>XP earned</div></div>
+          <div style={cell}><div style={num}>{stats.activeDays}</div><div style={cap}>Active days</div></div>
+          <div style={cell}><div style={num}>{stats.longestRun}</div><div style={cap}>Best run</div></div>
+        </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", fontSize: 30, color: "#888888" }}>
-        <div>{extras.join("  |  ")}</div>
-        <div style={{ color: "#6C63FF", fontWeight: 700 }}>nudge.com.ng</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", fontSize: 30, color: "#888888" }}>
+          <div>{extras.join("  |  ")}</div>
+          <div style={{ color: "#6C63FF", fontWeight: 700 }}>nudge.com.ng</div>
+        </div>
       </div>
     </div>
   );
@@ -95,14 +97,20 @@ function ReportDetail({ report }) {
     setBusy(true);
     setCardError("");
     try {
-      const url = await toPng(cardRef.current, { width: 1080, height: 1350, pixelRatio: 1, cacheBust: true });
-      setPng(url);
-    } catch (err) {
-      console.error(err);
-      setCardError("Could not create the image. Try again.");
-    } finally {
-      setBusy(false);
-    }
+      if (document.fonts?.ready) await document.fonts.ready;
+      const url = await toPng(cardRef.current, {
+        width: 1080,
+        height: 1350,
+        pixelRatio: 1,
+        cacheBust: true,
+        backgroundColor: "#000000",
+    });
+    setPng(url);
+  } catch (err) {
+    console.error(err);
+    setCardError("Could not create the image. Try again.");
+  } finally {
+    setBusy(false);
   }
 
   function download() {

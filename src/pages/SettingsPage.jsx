@@ -148,6 +148,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
     streakAlert:    true,
     dueDateWarning: true,
     weeklyPride:    false,
+    monthlyReport:  true,
     celebrationSfx: true,
   });
   const [reminderTime, setReminderTime] = useState("08:00");
@@ -175,6 +176,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
             streakAlert:    s.notification_streak_alert     ?? true,
             dueDateWarning: s.notification_due_date_warning ?? true,
             weeklyPride:    s.notification_weekly_pride     ?? false,
+            monthlyReport:  s.notification_monthly_report ?? true,
             celebrationSfx: s.notification_celebration_sfx ?? true,
           });
           setReminderTime(s.reminder_time  ?? "08:00");
@@ -259,6 +261,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
         notification_streak_alert:     notifs.streakAlert,
         notification_due_date_warning: notifs.dueDateWarning,
         notification_weekly_pride:     notifs.weeklyPride,
+        notification_monthly_report:   notifs.monthlyReport,
         notification_celebration_sfx:  notifs.celebrationSfx,
         reminder_time:                 reminderTime,
         accent_color:                  accent,
@@ -289,7 +292,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
   }
 
   function handleReset() {
-    setNotifs({ dailyReminder: true, streakAlert: true, dueDateWarning: true, weeklyPride: false, celebrationSfx: true });
+    setNotifs({ dailyReminder: true, streakAlert: true, dueDateWarning: true, weeklyPride: false, monthlyReport: true, celebrationSfx: true });
     setReminderTime("08:00");
     setAccent("#6C63FF");
     setTheme("dark");
@@ -451,6 +454,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
               <NotifRow label="Streak alert"              sub="Know when your streak is at risk"           on={notifs.streakAlert}     onChange={() => toggleNotif("streakAlert")}     accent={accent}/>
               <NotifRow label="Due date warning"          sub="Get warned 24 hours, 1 hour and 20 minutes before a task is due" on={notifs.dueDateWarning}  onChange={() => toggleNotif("dueDateWarning")}  accent={accent}/>
               <NotifRow label="Weekly pride report"       sub="A summary of everything you crushed"        on={notifs.weeklyPride}     onChange={() => toggleNotif("weeklyPride")}     accent={accent}/>
+              <NotifRow label="Monthly report"            sub="Your month in numbers, by email on the 1st" on={notifs.monthlyReport} onChange={() => toggleNotif("monthlyReport")} accent={accent}/>  
               <NotifRow label="Celebration sound effects" sub="Play sounds when you complete tasks"        on={notifs.celebrationSfx}  onChange={() => toggleNotif("celebrationSfx")}  accent={accent}/>
             </div>
             <div className="flex items-center gap-3 mt-4">
@@ -552,7 +556,7 @@ export default function SettingsPage({ onMenuOpen, user }) {
               <div>
                 <p className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>XP per task</p>
                 <p className="text-xs" style={{ color: "var(--text-faint)" }}>
-                  Short tasks earn 50 XP, longer tasks earn 75 XP
+                  Low priority earns 20 XP, medium 30 XP, high 45 XP
                 </p>
               </div>
               <span className="rounded-xl px-3 py-1.5 text-xs font-semibold text-white"

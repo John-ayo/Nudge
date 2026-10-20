@@ -104,13 +104,14 @@ function ReportDetail({ report }) {
         pixelRatio: 1,
         cacheBust: true,
         backgroundColor: "#000000",
-    });
-    setPng(url);
-  } catch (err) {
-    console.error(err);
-    setCardError("Could not create the image. Try again.");
-  } finally {
-    setBusy(false);
+      });
+      setPng(url);
+    } catch (err) {
+      console.error(err);
+      setCardError("Could not create the image. Try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   function download() {

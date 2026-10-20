@@ -154,11 +154,12 @@ export function TasksProvider({ children }) {
               setPendingBadges(prev => [...prev, ...new_badges]);
             }, 4000);
           }
-        } if (duplicate) return;
+        }
       }
     } catch (err) {
-      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, done: task.done } : t));
-      console.error("Toggle task error:", err);
+      console.error("toggleTask error:", err);
+      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, done: !newDone } : t));
+      navigate("/500", { state: { error: err.message } });
     }
   }, [tasks, user]);
 
